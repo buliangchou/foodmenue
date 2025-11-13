@@ -1,0 +1,2053 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>美食菜谱 - 菜单浏览与点餐</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        :root {
+            --primary: #ff6b6b;
+            --secondary: #ff9e7d;
+            --accent: #ffd166;
+            --light: #fff9f0;
+            --dark: #333333;
+            --success: #06d6a0;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --card-radius: 16px;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1.5rem 0;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo i {
+            font-size: 2rem;
+        }
+        
+        .logo h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        
+        .search-bar {
+            display: flex;
+            background: white;
+            border-radius: 30px;
+            overflow: hidden;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: var(--shadow);
+        }
+        
+        .search-bar input {
+            flex: 1;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1rem;
+            outline: none;
+        }
+        
+        .search-bar button {
+            background: var(--accent);
+            border: none;
+            padding: 0 20px;
+            cursor: pointer;
+            color: var(--dark);
+            transition: background 0.3s;
+        }
+        
+        .search-bar button:hover {
+            background: #ffc145;
+        }
+        
+        .filters {
+            background: white;
+            padding: 1.5rem 0;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+        
+        .filter-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .filter-btn {
+            background: white;
+            border: 2px solid #eee;
+            padding: 8px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .restaurant-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 25px;
+            margin-bottom: 3rem;
+        }
+        
+        .restaurant-card {
+            background: white;
+            border-radius: var(--card-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s, box-shadow 0.3s;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .restaurant-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-image {
+            height: 180px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+        
+        .restaurant-card:hover .card-image img {
+            transform: scale(1.05);
+        }
+        
+        .card-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: var(--primary);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .card-header {
+            padding: 15px;
+            background: var(--light);
+            border-bottom: 1px solid #eee;
+        }
+        
+        .restaurant-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .restaurant-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .card-body {
+            padding: 15px;
+            flex-grow: 1;
+        }
+        
+        .signature-dish {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .menu-items {
+            margin-top: 15px;
+        }
+        
+        .menu-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed #eee;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .menu-item:hover {
+            background-color: rgba(255, 107, 107, 0.05);
+        }
+        
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+        
+        .menu-item-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .dish-image {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .dish-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .dish-image:hover::after {
+            content: "\f06e";
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+        
+        .price {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        .tag {
+            background: var(--light);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .card-footer {
+            padding: 15px;
+            background: #f9f9f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .order-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s, transform 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .order-btn:hover {
+            background: #ff5252;
+            transform: scale(1.05);
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+            grid-column: 1 / -1;
+        }
+        
+        .no-results i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #ddd;
+        }
+        
+        .view-more {
+            text-align: center;
+            margin: 2rem 0;
+        }
+        
+        .view-more-btn {
+            background: white;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            padding: 10px 25px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .view-more-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        footer {
+            background: var(--dark);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            margin-top: 3rem;
+        }
+        
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            animation: fadeIn 0.3s;
+        }
+        
+        .modal-content {
+            margin: 5% auto;
+            display: block;
+            max-width: 80%;
+            max-height: 80%;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        
+        .close {
+            position: absolute;
+            top: 20px;
+            right: 35px;
+            color: white;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        
+        .close:hover {
+            color: var(--accent);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* 美食详情模态框样式 */
+        .dish-modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            animation: fadeIn 0.3s;
+        }
+        
+        .dish-modal-content {
+            position: relative;
+            background-color: #fff;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: var(--card-radius);
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .dish-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .dish-modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .dish-modal-close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        
+        .dish-modal-close:hover {
+            color: var(--primary);
+        }
+        
+        .dish-modal-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .dish-modal-info {
+            margin-bottom: 15px;
+        }
+        
+        .dish-modal-info h3 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            color: var(--dark);
+        }
+        
+        .dish-modal-info p {
+            line-height: 1.6;
+            color: #666;
+        }
+        
+        .dish-modal-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .dish-modal-tag {
+            background: var(--light);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .dish-modal-price {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-top: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .restaurant-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-options {
+                justify-content: flex-start;
+                overflow-x: auto;
+                padding-bottom: 10px;
+            }
+            
+            .modal-content {
+                max-width: 95%;
+                max-height: 70%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-utensils"></i>
+                    <h1>校园美食菜谱</h1>
+                </div>
+                <div class="search-bar">
+                    <input type="text" id="search-input" placeholder="搜索餐厅或菜品...">
+                    <button id="search-btn"><i class="fas fa-search"></i></button>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <section class="filters">
+        <div class="container">
+            <div class="filter-options">
+                <button class="filter-btn active" data-filter="all"><i class="fas fa-th-large"></i> 全部</button>
+                <button class="filter-btn" data-filter="区域" data-value="鲲园一楼"><i class="fas fa-utensils"></i> 鲲园一楼</button>
+                <button class="filter-btn" data-filter="区域" data-value="鲲园二楼"><i class="fas fa-utensils"></i> 鲲园二楼</button>
+                <button class="filter-btn" data-filter="区域" data-value="小吃街"><i class="fas fa-store"></i> 小吃街</button>
+                <button class="filter-btn" data-filter="区域" data-value="潮街"><i class="fas fa-store"></i> 潮街</button>
+                <button class="filter-btn" data-filter="区域" data-value="赵一鸣旁"><i class="fas fa-map-marker-alt"></i> 赵一鸣旁</button>
+                <button class="filter-btn" data-filter="类型" data-value="饮品店"><i class="fas fa-wine-glass"></i> 饮品</button>
+                <button class="filter-btn" data-filter="类型" data-value="中餐"><i class="fas fa-bowl-rice"></i> 中餐</button>
+                <button class="filter-btn" data-filter="类型" data-value="西式快餐"><i class="fas fa-hamburger"></i> 西式快餐</button>
+                <button class="filter-btn" data-filter="类型" data-value="烧烤"><i class="fas fa-fire"></i> 烧烤</button>
+            </div>
+        </div>
+    </section>
+    
+    <main class="container">
+        <div class="restaurant-grid" id="restaurant-container">
+            <!-- 餐厅卡片将通过JavaScript动态生成 -->
+        </div>
+        
+        <div class="view-more">
+            <button class="view-more-btn" id="view-more-btn">查看更多餐厅</button>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>美食菜谱 &copy; 2023 - 让校园生活更美味</p>
+            <p>数据来源：校园食堂菜单、赵一鸣周边、小吃街等</p>
+        </div>
+    </footer>
+
+    <!-- 图片模态框 -->
+    <div id="image-modal" class="modal">
+        <span class="close">&times;</span>
+        <img class="modal-content" id="modal-image">
+    </div>
+    
+    <!-- 美食详情模态框 -->
+    <div id="dish-modal" class="dish-modal">
+        <div class="dish-modal-content">
+            <div class="dish-modal-header">
+                <h2 class="dish-modal-title" id="dish-modal-title">美食名称</h2>
+                <span class="dish-modal-close">&times;</span>
+            </div>
+            <img class="dish-modal-image" id="dish-modal-image" src="" alt="美食图片">
+            <div class="dish-modal-info">
+                <h3>口味特点</h3>
+                <p id="dish-modal-flavor">口味描述</p>
+            </div>
+            <div class="dish-modal-info">
+                <h3>餐厅信息</h3>
+                <p id="dish-modal-restaurant">餐厅名称</p>
+                <p id="dish-modal-address">餐厅地址</p>
+            </div>
+            <div class="dish-modal-tags" id="dish-modal-tags">
+                <!-- 标签将通过JavaScript动态生成 -->
+            </div>
+            <div class="dish-modal-price" id="dish-modal-price">价格信息</div>
+        </div>
+    </div>
+
+    <script>
+        // 餐厅数据
+        const restaurants = [
+            {
+                "店名": "小炒档口",
+                "地址": "鲲园饭堂一楼，进门右手边第一家",
+                "招牌菜": "辣子鸡丁(14元)、鱼香肉丝(13元)",
+                "口味": "川湘地道风味，猛火快炒，锅气十足。辣子鸡丁外酥里嫩，麻辣干香；鱼香肉丝酸甜微辣，芡汁红亮；手撕包菜脆爽酸辣，麻婆豆腐麻辣鲜香，十分下饭",
+                "菜单": {
+                    "辣子鸡丁": { "价格": "14元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.L6nilW935zqY3M1H1W227QHaF7?w=244&h=195&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "鱼香肉丝": { "价格": "13元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.yORUr7SFSPASHfLCPTC75gHaE8?w=247&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "手撕包菜": { "价格": "8元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.wZ54N2V5YSFqOiBFVX-zKgHaEJ?w=316&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "麻婆豆腐": { "价格": "10元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.2aXkhDo0JP9JsBoqWmio7QHaEo?w=314&h=196&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "时蔬小炒": { "价格": "8元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.47mo97iogXQxP3WiBbZQSQHaFj?w=236&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "回锅肉": { "价格": "15元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.xxyKUwJWV2_hsXrleoK0QQAAAA?w=269&h=185&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "宫保鸡丁": { "价格": "14元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.nMiv8BOMKfBcX1sUmxdwFQHaEJ?w=321&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "水煮肉片": { "价格": "16元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.7iN6qM_EH2ecSb_3ifknnAHaE8?w=295&h=197&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "鲲园一楼",
+                "口味标签": ["咸香麻辣", "酸辣", "香辣", "干香"],
+                "距离": "10分钟",
+                "类型": "中餐",
+                "营业时间": "6:00-20:30",
+                "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.L6nilW935zqY3M1H1W227QHaF7?w=244&h=195&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-utensils",
+                "热销": true
+            },
+            {
+                "店名": "广式烧腊",
+                "地址": "鲲园饭堂一楼，进门右手边第二家",
+                "招牌菜": "烧鸭腿饭(16元)、叉烧拼盘(18元)",
+                "口味": "经典广式风味，烧鸭外皮酥脆如玻璃，肉质紧实多汁，搭配酸梅酱解腻；叉烧色泽红亮，蜜汁香甜，肥瘦相间；白切鸡皮爽肉滑，骨髓带血，鲜嫩至极",
+                "菜单": {
+                    "烧鸭腿饭": { "价格": "16元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.uzvdACiplVraM9lmx7PuSAHaFj?w=267&h=201&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "叉烧饭": { "价格": "15元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.OV47ePJGUnRdw1ucBYYLQAHaE8?w=279&h=186&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3"},
+                    "白切鸡饭": { "价格": "15元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.qfuUJBuEeej2Us6H-PYYNQHaE6?w=289&h=192&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "双拼饭": { "价格": "17元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.Nqw4e0AbcoOCdsh9WZyI9AHaE0?w=272&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "烧肉饭": { "价格": "16元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.nbMR3hZ-u0HlttyyShJcOgHaE8?w=263&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "油鸡饭": { "价格": "15元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.xgxs9tgVb7lzhJ63paZkfQHaE6?w=293&h=195&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "三宝饭": { "价格": "19元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.h2J3DRp5w9povfK1w-MKtwHaE9?w=283&h=189&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "鲲园一楼",
+                "口味标签": ["咸甜", "咸香", "蜜汁", "酥脆"],
+                "距离": "10分钟",
+                "类型": "中餐",
+                "营业时间": "6:00-20:30",
+                "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.uzvdACiplVraM9lmx7PuSAHaFj?w=267&h=201&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-drumstick-bite",
+                "热销": true
+            },
+            {
+                "店名": "青春时尚简餐",
+                "地址": "鲲园饭堂一楼，进门右手边",
+                "招牌菜": "黑椒牛柳饭(16元)、咖喱鸡饭(14元)",
+                "口味": "西式简餐风格，黑椒牛柳酱汁浓郁，胡椒香气突出，牛柳嫩滑；咖喱鸡饭咖喱香醇，带有椰奶甜香，鸡肉入味；番茄意面酸甜开胃，意面软硬适中",
+                "菜单": {
+                    "黑椒牛柳意面": { "价格": "16元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.8jBLkg7G6jnuJlmH6_qrZQHaF7?w=241&h=193&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "咖喱鸡饭": { "价格": "14元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.ZF8juYlmcox6A3JQziXEhAHaFM?w=265&h=186&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "黑椒牛柳饭": { "价格": "16元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.hdC1lEucLJ8X9oLEnTpLjAHaE7?w=274&h=183&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "番茄意面": { "价格": "13元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.j-A1Ju299z28-Zye2M818QHaE9?w=304&h=203&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "照烧鸡排饭": { "价格": "15元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C._t_YwO3N2YRjaID6VEEL-wHaFj?w=236&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "芝士焗饭": { "价格": "17元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.pmI7N0m-rNns5IGakrb81AHaHa?w=197&h=197&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "罗勒意面": { "价格": "14元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.NnBXjNmSA993yvg7C6nnNgHaFj?w=274&h=205&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "鲲园一楼",
+                "口味标签": ["咸香", "咸香微辣", "奶香", "酸甜"],
+                "距离": "10分钟",
+                "类型": "西式快餐",
+                "营业时间": "6:00-20:30",
+                "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.8jBLkg7G6jnuJlmH6_qrZQHaF7?w=241&h=193&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-hamburger",
+                "热销": false
+            },
+            {
+                "店名": "蛋包饭专门店",
+                "地址": "鲲园饭堂一楼，进门右手边",
+                "招牌菜": "咖喱炸鸡蛋包饭(16元)、肥牛蛋包饭(18元)",
+                "口味": "日式风格，蛋皮嫩滑如绸，包裹着炒饭，咖喱炸鸡外酥里嫩，酱汁浓郁；肥牛蛋包饭肥牛片量足，照烧汁入味，与滑蛋形成绝妙口感",
+                "菜单": {
+                    "咖喱炸鸡蛋包饭": { "价格": "16元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.0-tHq9pSMKXRbBpRcNre4wHaFj?w=278&h=208&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "照烧鸡排蛋包饭": { "价格": "17元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.Qse62XAc6WECb3PeqcVIMgHaF7?w=254&h=203&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "肥牛蛋包饭": { "价格": "18元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.ZdFlbWzmjaMzy7knqfrRmwHaE8?w=263&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "番茄虾仁蛋包饭": { "价格": "18元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.8nHp15d2Mr3OjMr9eiV3pQHaEK?w=297&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "芝士咖喱蛋包饭": { "价格": "17元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.smNReGtFrGIqh-W5iY_tFgHaE8?w=256&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "炸猪排蛋包饭": { "价格": "19元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.MKMu66qjg5koMNaCJY_HUQHaE8?w=304&h=203&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "鲲园一楼",
+                "口味标签": ["咸甜", "咸香微辣", "滑嫩", "酱香"],
+                "距离": "10分钟",
+                "类型": "西式快餐",
+                "营业时间": "6:00-20:30",
+                "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.MKMu66qjg5koMNaCJY_HUQHaE8?w=304&h=203&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-egg",
+                "热销": true
+            },
+            {
+                "店名": "魔饭青年",
+                "地址": "鲲园饭堂一楼，进门右手边",
+                "招牌菜": "招牌酱汁烤肉饭(15元)、双椒鸡扒饭(16元)",
+                "口味": "中式快餐风格，招牌酱汁烤肉饭酱香浓郁，微甜咸鲜，十分下饭；双椒鸡扒饭使用青红椒，辣味鲜明，鸡扒外焦里嫩；爆香牛腩饭牛腩软烂，萝卜清甜",
+                "菜单": {
+                    "招牌酱汁烤肉饭": { "价格": "15元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.k8RImRAz62p_y9tCP8hA6AHaE7?w=287&h=191&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "爆香牛腩饭": { "价格": "17元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.XQs43tYxTXq30ArmRe_xmAHaE9?w=281&h=188&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "双椒鸡扒饭": { "价格": "16元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.SVsKzEx1Dl5eZ5heqeMugwHaE6?w=301&h=199&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "卤肉饭": { "价格": "14元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.jlK-S5KqvaGfRzOPCBEYowHaE8?w=269&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "小炒肉饭": { "价格": "16元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.yPS1OcQzFpUn-cnNOsVipgHaE8?w=277&h=185&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "农家一碗香": { "价格": "15元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.QWY7XkbgjJJZoAe9UwQ6twHaFj?w=240&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "鲲园一楼",
+                "口味标签": ["咸甜", "咸香麻辣", "酱香", "香辣"],
+                "距离": "10分钟",
+                "类型": "中餐",
+                "营业时间": "6:00-20:30",
+                "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.QWY7XkbgjJJZoAe9UwQ6twHaFj?w=240&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-utensils",
+                "热销": true
+            },
+            {
+                "店名": "重庆鸡公煲",
+                "地址": "鲲园饭堂一楼，进门右手边",
+                "招牌菜": "重庆鸡公煲",
+                "口味": "川渝特色，麻辣鲜香，酱汁浓郁。鸡肉紧实入味，配菜吸饱汤汁，越煮越香。可根据喜好选择辣度，是重口味爱好者的首选",
+                "菜单": {
+                    "鸡公煲(小)": { "价格": "22元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.GmtI3uJqpkmmHhq3CrmTpgHaFW?w=235&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "鸡公煲(中)": { "价格": "28元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.GmtI3uJqpkmmHhq3CrmTpgHaFW?w=235&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "鸡公煲(大)": { "价格": "35元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.GmtI3uJqpkmmHhq3CrmTpgHaFW?w=235&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "土豆": { "价格": "3元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.52pcEvF2CpsM7QLiyIR8UAHaE7?w=281&h=187&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "宽粉": { "价格": "4元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.LFijlBIgK3hywUF-_-RTCAHaE8?w=302&h=202&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "金针菇": { "价格": "4元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.X8X1BBs3E8GaNDUHFOs0BgHaFm?w=228&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "豆皮": { "价格": "3元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.3aFPLWqUdPc5OlxEg2grawHaEK?w=306&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "午餐肉": { "价格": "5元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.6u0HpE3t8tS7_rVifjJkeAHaE8?w=284&h=189&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "娃娃菜": { "价格": "3元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.d7hoe1KnCz2qYlxy5Au-xgHaFP?w=256&h=181&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "鲲园一楼",
+                "口味标签": ["麻辣咸香", "酱香", "鲜香"],
+                "距离": "10分钟",
+                "类型": "中餐",
+                "营业时间": "6:00-20:30",
+                "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.GmtI3uJqpkmmHhq3CrmTpgHaFW?w=235&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-hotpot",
+                "热销": true
+            },
+            {
+                "店名": "广式云吞",
+                "地址": "鲲园饭堂一楼，进门右手边",
+                "招牌菜": "鲜虾云吞面(15元)",
+                "口味": "广式清淡风格，汤头用大地鱼和猪骨熬制，清澈而鲜美。云吞皮薄如蝉翼，馅料饱满，鲜虾弹牙。竹升面爽脆弹牙，碱水味适中",
+                "菜单": {
+                    "鲜虾云吞面": { "价格": "15元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.d81A3_O1SuDKZWFIDZNZMwHaE8?w=282&h=188&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "鲜肉云吞": { "价格": "12元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.J2mauwZCny_9ayKmNuDGpQHaFj?w=241&h=181&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "干拌云吞": { "价格": "13元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.dO2QpR6ham3jyas0BW-K1QHaFj?w=256&h=192&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "南乳猪手面": { "价格": "16元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.LZZ6meLI-7HlySvABsN78wHaEc?w=280&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "牛腩云吞面": { "价格": "17元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.nTcGFwrjdhrKkEAjHgprtAHaFX?w=241&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "鲲园一楼",
+                "口味标签": ["咸鲜", "清淡", "鲜美"],
+                "距离": "10分钟",
+                "类型": "中餐",
+                "营业时间": "6:00-20:30",
+                "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.nTcGFwrjdhrKkEAjHgprtAHaFX?w=241&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-bowl-food",
+                "热销": false
+            },
+            {
+                "店名": "柳州螺蛳粉",
+                "地址": "鲲园饭堂一楼，进门右手边",
+                "招牌菜": "招牌螺蛳粉(14元)、炸蛋螺蛳粉(17元)",
+                "口味": "柳州地道风味，汤底由螺蛳和猪骨熬制，酸辣鲜爽，滋味浓郁。酸笋脆嫩酸香，米粉Q弹爽滑，炸蛋吸满汤汁后口感绝佳",
+                "菜单": {
+                    "招牌螺蛳粉": { "价格": "14元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.oBCKnXXnbBlGlRTSNbNZUQHaE8?w=263&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "炸蛋螺蛳粉": { "价格": "17元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.my_ggDAqf7CWzNk555MKcgHaFj?w=214&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "鸭脚螺蛳粉": { "价格": "16元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.50J0wjxAoqf9Cp0ZgqQn5AHaE8?w=273&h=182&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "干捞螺蛳粉": { "价格": "15元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.5I_LKifKsSkXrZX1Zrg2iwHaFj?w=241&h=181&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "三鲜螺蛳粉": { "价格": "16元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.Yj2lIKXoV8hPwwQCXuSUXwHaGP?w=215&h=181&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "加腐竹": { "价格": "2元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.2mJIxMR5Uy-8IYPY1DymYQHaEJ?w=278&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "加酸笋": { "价格": "1元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.UbdDrohUn8aN50DhuVh_cgHaE8?w=292&h=195&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "鲲园一楼",
+                "口味标签": ["酸辣", "咸香", "鲜爽", "螺香"],
+                "距离": "10分钟",
+                "类型": "中餐",
+                "营业时间": "6:00-20:30",
+                "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.oBCKnXXnbBlGlRTSNbNZUQHaE8?w=263&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-bowl-rice",
+                "热销": true
+            },
+            {
+                "店名": "汤粉世家",
+                "地址": "鲲园饭堂一楼，进门右手边",
+                "招牌菜": "猪肉丸粉(13元)、牛腩粉(16元)",
+                "口味": "潮汕风味，汤清味鲜，猪肉丸为手工捶打，紧实弹牙；牛腩软烂入味，汤底清澈却滋味醇厚，搭配芹菜粒和蒜头油，香气扑鼻",
+                "菜单": {
+                    "猪肉丸粉": { "价格": "13元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.IUfyhNxiV72lUkaanXGLqAHaE6?w=270&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "牛腩粉": { "价格": "16元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.eYZpQgvuGyQrSHlOvmDbowHaFk?w=247&h=185&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "猪杂汤粉": { "价格": "14元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.YqZ6HDTybyTzc8WyyijetQHaHa?w=179&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "牛肉丸粉": { "价格": "15元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.s2baTSFvHSJ3z0n72OniSAHaHa?w=185&h=185&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "海鲜汤粉": { "价格": "17元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.7y8iUbhqcKlvoMBfklMlvQHaE8?w=238&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "鲲园一楼",
+                "口味标签": ["咸鲜", "清淡", "原汁原味"],
+                "距离": "10分钟",
+                "类型": "中餐",
+                "营业时间": "6:00-20:30",
+                "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.IUfyhNxiV72lUkaanXGLqAHaE6?w=270&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-bowl-food",
+                "热销": false
+            },
+            {
+                "店名": "小锅猪肚鸡",
+                "地址": "鲲园饭堂一楼，进门右手边",
+                "招牌菜": "胡椒猪肚鸡(22元)",
+                "口味": "广式养生煲汤，汤色奶白，滋味浓郁。猪肚爽脆，鸡肉嫩滑，胡椒辛香暖胃驱寒，在天气转凉时来一锅，暖心暖胃",
+                "菜单": {
+                    "原味猪肚鸡": { "价格": "20元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.j6wKTdrwCbAm4yIpS9vJwwHaFF?w=266&h=183&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "胡椒猪肚鸡": { "价格": "22元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.LQn8sGjxEuAgefh1Xv9F4gHaE8?w=249&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "蔬菜拼盘": { "价格": "5元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.JODiiJA_TffNV-gWnPnGsQHaE7?w=277&h=183&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "豆腐泡": { "价格": "3元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.KeYGjhaoIaNGthvqfUh-IQHaFH?w=291&h=201&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "玉米": { "价格": "4元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.ytl4MYEHuEhwdBUFIA_8BQHaEK?w=331&h=186&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "山药": { "价格": "5元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.ljsDGx6KR9VJreBEOp7RUgHaE8?w=222&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "鲲园一楼",
+                "口味标签": ["咸鲜", "胡椒辛香", "奶香"],
+                "距离": "10分钟",
+                "类型": "中餐",
+                "营业时间": "6:00-20:30",
+                "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.j6wKTdrwCbAm4yIpS9vJwwHaFF?w=266&h=183&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-pot-food",
+                "热销": true
+            },
+            {
+                "店名": "大众餐线",
+                "地址": "鲲园饭堂一楼，最右侧区域",
+                "招牌菜": "自选家常菜",
+                "口味": "经济实惠的家常味道，菜品选择多样，每日更新。口味涵盖咸鲜、甜口、酸辣等多种风格，满足不同需求，是日常就餐的稳妥选择",
+                "菜单": {
+                    "素菜": { "价格": "3-5元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.2lGmdI5J5TeiD9fZR-_u0wHaEJ?w=333&h=187&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "半荤": { "价格": "6-8元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C._eraD21E2lNNBUSzPQLajQHaEJ?w=286&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "荤菜": { "价格": "8-12元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.-X4TMxUqI5GFeAtysCsXbgHaEJ?w=321&h=181&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "米饭": { "价格": "1元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.t5mMyL03UFtTtnCp5__mxwHaGR?w=229&h=194&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "例汤": { "价格": "免费", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.uhXus80Lb8JFPEOjUgTY5QHaFi?w=238&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "鲲园一楼",
+                "口味标签": ["咸鲜", "甜口", "酸辣", "家常"],
+                "距离": "10分钟",
+                "类型": "中餐",
+                "营业时间": "6:00-20:30",
+                "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.2lGmdI5J5TeiD9fZR-_u0wHaEJ?w=333&h=187&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-utensils",
+                "热销": false
+            },
+            {
+                "店名": "甜蜜烘焙",
+                "地址": "鲲园饭堂一楼，进门左手边",
+                "招牌菜": "蛋挞(3.5元)、肉松包(5元)",
+                "口味": "香甜可口的现烤烘焙，蛋挞酥皮层次分明，蛋液嫩滑；肉松包沙拉酱丰富，肉松量足；吐司外脆内软，是早餐和下午茶的优选",
+                "菜单": {
+                    "烤吐司": { "价格": "4元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.ISLd8nxFaT9tgXmd4Yu4LwHaF7?w=239&h=191&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "蛋挞": { "价格": "3.5元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.e2jSlEh4l29el_nUBAfetQHaF7?w=231&h=185&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "肉松包": { "价格": "5元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.D6HrPXwtdNmfJFcKzgQJqwHaE8?w=284&h=189&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "小蛋糕": { "价格": "6-8元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.RLiC0dnPxfjn3LyYInCjGgHaHa?w=177&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "豆浆": { "价格": "2元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.jChSyjDMbd-I7GKLvBNAbwHaFj?w=239&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "菠萝包": { "价格": "4元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.x4Yn3lJDbcd5tf_RhM55yQHaJG?w=174&h=214&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "肠仔包": { "价格": "5元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.kHA4GUapSWyDyTXVRxc4RAHaLH?w=202&h=303&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "鲲园一楼",
+                "口味标签": ["甜口", "咸甜", "酥香"],
+                "距离": "10分钟",
+                "类型": "西式快餐",
+                "营业时间": "6:00-20:30",
+                "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.x4Yn3lJDbcd5tf_RhM55yQHaJG?w=174&h=214&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-bread-slice",
+                "热销": true
+            },
+            {
+                "店名": "川味麻辣烫",
+                "地址": "鲲园饭堂一楼，进门左手边",
+                "招牌菜": "自选麻辣烫",
+                "口味": "川味特色，提供骨汤、麻辣、番茄等多种汤底。骨汤醇厚，麻辣汤底椒麻鲜香，番茄汤底酸甜开胃。食材自选，新鲜多样，满足个性化需求",
+                "菜单": {
+                    "称重计价": { "价格": "2.5元/两", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.vNYHZ0vsWMLi4nfLG4rWEwHaE7?w=272&h=181&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "方便面": { "价格": "2元/块", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.BcuQFXs8iFFl_WAWGUUU3wHaEK?w=289&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "鲲园一楼",
+                "口味标签": ["麻辣", "咸鲜", "酸甜", "骨香"],
+                "距离": "10分钟",
+                "类型": "中餐",
+                "营业时间": "6:00-20:30",
+                "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.vNYHZ0vsWMLi4nfLG4rWEwHaE7?w=272&h=181&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-bowl-hot",
+                "热销": true
+            },
+            {
+                "店名": "沁心糖水",
+                "地址": "鲲园饭堂一楼，进门左手边最尽头",
+                "招牌菜": "双皮奶(8元)、杨枝甘露(12元)、烧仙草(10元)",
+                "口味": "经典广式糖水，双皮奶口感顺滑，奶香浓郁；杨枝甘露果香清新，酸甜解腻；烧仙草用料丰富，搭配奶茶或蜂蜜水，清凉解暑",
+                "菜单": {
+                    "红豆沙": { "价格": "6元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.PSwoQ_9ZClnKftKmljrrVAHaJ4?w=133&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "绿豆沙": { "价格": "6元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.g-QqhN751yW7j7IUGlzMaQHaJ4?w=150&h=199&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "双皮奶": { "价格": "8元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.8iCj87figzuZGfQdZNes9AHaEK?w=313&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "杨枝甘露": { "价格": "12元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.pdYuIjJexmSv_iooxsw0hwHaLb?w=201&h=310&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "烧仙草": { "价格": "10元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.8ZOuiRqWw4xsJw2-JNPh0AEsDI?w=262&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "芝麻糊": { "价格": "7元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.o3e3yayU7fok0e1y9RWgMQHaHa?w=204&h=204&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "冰糖雪耳": { "价格": "8元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.oibHNB75WmepuOvnCU18CAHaFA?w=295&h=199&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "鲲园一楼",
+                "口味标签": ["甜口", "清新", "奶香", "果香"],
+                "距离": "10分钟",
+                "类型": "饮品店",
+                "营业时间": "6:00-20:30",
+                "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.oibHNB75WmepuOvnCU18CAHaFA?w=295&h=199&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-ice-cream",
+                "热销": true
+            },
+            {
+                "店名": "隆江猪脚饭",
+                "地址": "鲲园饭堂二楼，进门右手边",
+                "招牌菜": "招牌猪脚饭(16元)",
+                "口味": "潮汕卤味代表作，猪脚经长时间卤制，皮肉软糯，入口即化。卤汁香浓，咸中带甜，浇在米饭上，搭配酸菜解腻，令人食欲大开",
+                "菜单": {
+                    "招牌猪脚饭": { "价格": "16元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.cNKiVrqH0Mt6NmTvhUf4jgHaE8?w=239&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "猪脚+肉卷饭": { "价格": "18元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.nIcc91EbKAjg5hnY4_iufQHaE8?w=268&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "猪脚+烧鸭饭": { "价格": "19元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.WFM_qz3mILrRk0MtIduoYAHaE8?w=273&h=182&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "四宝饭": { "价格": "20元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.L_PQB7UeT6d0U6cAALktyAHaE8?w=280&h=187&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "卤猪耳饭": { "价格": "15元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.bExlS4YBz3upvIWDk08ugwHaFk?w=262&h=197&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "鲲园二楼",
+                "口味标签": ["咸香", "卤香", "软糯"],
+                "距离": "10分钟",
+                "类型": "中餐",
+                "营业时间": "6:00-20:30",
+                "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.bExlS4YBz3upvIWDk08ugwHaFk?w=262&h=197&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-drumstick-bite",
+                "热销": true
+            },
+            {
+                "店名": "沙县小吃",
+                "地址": "鲲园饭堂二楼，进门右手边",
+                "招牌菜": "柳叶蒸饺(8元)、飘香拌面(7元)",
+                "口味": "福建经典风味，柳叶蒸饺皮薄馅多，蘸花生酱吃风味独特；飘香拌面花生酱浓郁，面条筋道；扁肉（馄饨）皮薄汤鲜，口感滑嫩",
+                "菜单": {
+                    "柳叶蒸饺": { "价格": "8元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.8A4vhhHDlc1I0YcUOHeergAAAA?w=156&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "飘香拌面": { "价格": "7元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.GfZFqUvLv-aLCqwC8BBXKwHaFj?w=265&h=199&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "扁肉（馄饨）": { "价格": "10元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.NnqQlZXOY5730fyHbphmnQHaE8?w=271&h=182&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "鸡腿饭": { "价格": "15元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.snEVKFWrUrZ5MIJXM4g3aAHaF7?w=239&h=191&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "炒河粉": { "价格": "12元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.nXRZd8tQRAzo3WWrbiyH3QHaE8?w=298&h=198&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "当归猪脑汤": { "价格": "15元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.nkeWUuf0S65wnQ3PEydT_AHaFj?w=259&h=194&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "鲲园二楼",
+                "口味标签": ["咸香", "咸甜", "花生酱香"],
+                "距离": "10分钟",
+                "类型": "中餐",
+                "营业时间": "6:00-20:30",
+                "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.8A4vhhHDlc1I0YcUOHeergAAAA?w=156&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-utensils",
+                "热销": false
+            },
+            {
+                "店名": "茶香鸡",
+                "地址": "鲲园饭堂二楼，进门右手边",
+                "招牌菜": "原味茶香鸡(16元)",
+                "口味": "特色烟熏风味，鸡肉经茶叶熏制，带有独特的茶香和烟熏气息，肉质鲜嫩多汁。原味咸香，麻辣味则在基础上增加了椒麻口感",
+                "菜单": {
+                    "原味茶香鸡": { "价格": "16元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.ZCuVaako0TZoi9kXpjxD-AHaE7?w=304&h=203&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "麻辣茶香鸡": { "价格": "17元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.TdRgMbF4vJ7jFic5BEEkXQHaFj?w=250&h=187&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "茶香鸡腿饭": { "价格": "18元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.jQxAB6VxgySbtlU6_A9ooAHaFK?w=269&h=187&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "手撕鸡饭": { "价格": "17元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.KmtvmhaLYowfP3DIkCF4HQHaE8?w=274&h=183&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "鲲园二楼",
+                "口味标签": ["咸香", "烟熏", "麻辣", "茶香"],
+                "距离": "10分钟",
+                "类型": "中餐",
+                "营业时间": "6:00-20:30",
+                "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.ZCuVaako0TZoi9kXpjxD-AHaE7?w=304&h=203&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-drumstick-bite",
+                "热销": true
+            },
+            {
+                "店名": "大块牛肉面",
+                "地址": "鲲园饭堂二楼，进门右手边",
+                "招牌菜": "红烧牛肉面(18元)",
+                "口味": "真材实料，牛肉大块软烂，汤底醇厚，由牛骨长时间熬制而成，浓郁鲜香。面条筋道，红烧口味咸香，番茄口味则酸甜开胃",
+                "菜单": {
+                    "红烧牛肉面": { "价格": "18元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.klHzoQfVaLEtEOv5T-NZtgHaE7?w=281&h=187&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "红烧牛肉饭": { "价格": "18元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.SAcJgr_XCSlhcoD2vQPl2wHaE8?w=274&h=183&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "番茄牛肉面": { "价格": "17元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.KKGf8bTyn5lsx4mdMGjtbQHaE7?w=262&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "番茄牛肉饭": { "价格": "17元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.noK7sjTa-0_PNNJofR-vrgHaE7?w=280&h=185&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "麻辣牛肉面": { "价格": "19元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.qiRAaQX0DpTwc9EKkVXHdwHaE8?w=288&h=192&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "鲲园二楼",
+                "口味标签": ["咸香", "酸甜", "醇厚"],
+                "距离": "10分钟",
+                "类型": "中餐",
+                "营业时间": "6:00-20:30",
+                "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.qiRAaQX0DpTwc9EKkVXHdwHaE8?w=288&h=192&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-bowl-food",
+                "热销": true
+            },
+            {
+                "店名": "韩式石锅饭",
+                "地址": "鲲园饭堂二楼，进门右手边",
+                "招牌菜": "泡菜肥牛石锅饭(19元)",
+                "口味": "韩式甜辣风味，石锅保温性好，底部米饭会形成焦香的锅巴。泡菜酸辣开胃，肥牛鲜嫩，与蔬菜、鸡蛋一起拌匀，口感丰富",
+                "菜单": {
+                    "泡菜肥牛石锅饭": { "价格": "19元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C._fQ7Dq8QnDzlxrD2iAwtngHaFk?w=231&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "照烧鸡石锅饭": { "价格": "17元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.KGS-VFXkMvDwEb6PdSQX-wHaFj?w=269&h=202&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "素食石锅饭": { "价格": "15元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.KYcLzwWIgxA44PP4FlADVgHaER?w=307&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "五花肉石锅饭": { "价格": "18元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.3_vigO3yUZLOJlbpfKQGjwHaEa?w=288&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "鲲园二楼",
+                "口味标签": ["甜辣", "咸甜", "焦香"],
+                "距离": "10分钟",
+                "类型": "西式快餐",
+                "营业时间": "6:00-20:30",
+                "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.3_vigO3yUZLOJlbpfKQGjwHaEa?w=288&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-bowl-rice",
+                "热销": false
+            },
+            {
+                "店名": "麻辣香锅",
+                "地址": "鲲园饭堂二楼，进门左手边第一家",
+                "招牌菜": "自选麻辣香锅",
+                "口味": "干锅特色，相比麻辣烫水分更少，味道更干香。食材经猛火爆炒，麻辣鲜香，口味可选择香辣、麻辣或酱香，香气扑鼻，十分下饭",
+                "菜单": {
+                    "称重计价": { "价格": "2.8元/两", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.HHLEKreTWqaoS3aXomQitgHaE8?w=267&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "米饭": { "价格": "2元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.UlJ9QUlT2oaVljzKeogsjAHaGc?w=196&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "鲲园二楼",
+                "口味标签": ["麻辣", "香辣", "咸香", "干香"],
+                "距离": "10分钟",
+                "类型": "中餐",
+                "营业时间": "6:00-20:30",
+                "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.HHLEKreTWqaoS3aXomQitgHaE8?w=267&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-hotpot",
+                "热销": true
+            },
+            {
+                "店名": "花甲粉",
+                "地址": "鲲园饭堂二楼，进门左手边",
+                "招牌菜": "金汤花甲粉(16元)、蒜蓉花甲粉(16元)",
+                "口味": "花甲鲜美无沙，汤粉一体。金汤酸辣开胃，蒜蓉口味蒜香浓郁，汤汁鲜美。粉丝吸收汤汁精华，顺滑入味",
+                "菜单": {
+                    "金汤花甲粉": { "价格": "16元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.VAJxCaMtcosriBWhZfxQEAHaFm?w=268&h=203&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "蒜蓉花甲粉": { "价格": "16元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.KQua8PTjsL_DwWadgxBQ8AHaE8?w=255&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "肥牛花甲粉": { "价格": "18元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.AH35qBo19kIkpUXu9pwiWwHaE8?w=262&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "海鲜花甲粉": { "价格": "19元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.iMV2hEl_7NDfMyuFJUAlkwHaE8?w=260&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "鲲园二楼",
+                "口味标签": ["咸鲜", "蒜香", "酸辣", "鲜美"],
+                "距离": "10分钟",
+                "类型": "中餐",
+                "营业时间": "6:00-20:30",
+                "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.iMV2hEl_7NDfMyuFJUAlkwHaE8?w=260&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-bowl-food",
+                "热销": true
+            },
+            {
+                "店名": "Q堡堡",
+                "地址": "鲲园饭堂二楼，进门左手边",
+                "招牌菜": "香辣鸡腿堡(12元)、炸鸡翅(8元)",
+                "口味": "西式快餐风格，汉堡现点现做，面包松软，鸡腿排外皮酥脆，肉质多汁。炸鸡翅外酥里嫩，薯条金黄香脆，是快捷饱腹的选择",
+                "菜单": {
+                    "香辣鸡腿堡": { "价格": "12元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.Ns_cwFMSTpMxIGNdtdkSRwHaFj?w=229&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "牛肉堡": { "价格": "13元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.rII7q4nc1MHzD6eHv2MO6gHaFj?w=253&h=190&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "薯条": { "价格": "7元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.vf4xAeEFpeoW4jMZQAEbSwHaHa?w=185&h=185&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "炸鸡翅": { "价格": "8元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.IZhOKKQFzTO7oOZ7UwIjDgHaFf?w=263&h=195&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "可乐": { "价格": "4元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.I8_Kr4AuytgVtkrhKDAaqAHaEq?w=290&h=182&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "鳕鱼堡": { "价格": "14元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.JvlFfWf1TTIHUBC1W524zQHaHa?w=196&h=196&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "鸡肉卷": { "价格": "10元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.VBbNVPugFoWFzKsuea5H3gHaE7?w=279&h=186&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "鲲园二楼",
+                "口味标签": ["咸香", "香辣", "酥脆"],
+                "距离": "10分钟",
+                "类型": "西式快餐",
+                "营业时间": "6:00-20:30",
+                "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.Ns_cwFMSTpMxIGNdtdkSRwHaFj?w=229&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-hamburger",
+                "热销": false
+            },
+            {
+                "店名": "清爽柠檬茶",
+                "地址": "校门口对面小吃街第一排",
+                "招牌菜": "手打柠檬茶(8元)、鸭屎香柠檬茶(10元)",
+                "口味": "手打暴爽，采用广东香水柠檬，手工大力捶打30+次，充分激发柠檬皮油香和果肉汁水，果香浓郁。搭配特选茶底，鸭屎香茶汤金黄，带有独特兰花香气，回甘悠长；四季春茶清新爽口。整体酸甜平衡，冰爽解腻，是搭配各种小吃的最佳伴侣",
+                "菜单": {
+                    "手打柠檬茶": { "价格": "8元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.Kug9yDOjr5hICaG2j_uwVwHaLG?w=202&h=303&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "鸭屎香柠檬茶": { "价格": "10元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.BpMQweytx5_LbeAe2UrY5AHaLo?w=199&h=313&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "椰奶柠檬茶": { "价格": "12元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.CAmkIivKVNNHm8xP74izqwHaJ-?w=131&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "薄荷柠檬茶": { "价格": "9元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.Q7o2ZTZMyhGtCdoduEwdQQHaE7?w=303&h=202&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "咸柠七": { "价格": "10元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.0LboHS42qOtXFpxIII2MMwHaE7?w=271&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "柠檬红茶": { "价格": "8元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.0CtPM599WKuC4lbsU1pzOwHaJ7?w=137&h=184&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "柠檬绿茶": { "价格": "8元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.tB5bVbmxPQIYC-hzeS1wjAHaLP?w=202&h=308&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "百香果柠檬茶": { "价格": "12元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.ePRqOR_5bHdR9_tMx9SnuQHaLG?w=202&h=303&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "西柚柠檬茶": { "价格": "13元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.ERbA_Vm4N4K_orTG4tSVxQHaLK?w=202&h=304&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "金桔柠檬": { "价格": "9元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.QozO_BHhPEbnJl4TzTN66gHaHa?w=202&h=202&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "小吃街",
+                "口味标签": ["清新酸甜", "茶香", "解腻", "冰爽"],
+                "距离": "20分钟",
+                "类型": "饮品店",
+                "营业时间": "10:00-22:00",
+                "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.QozO_BHhPEbnJl4TzTN66gHaHa?w=202&h=202&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-glass-whiskey",
+                "热销": true
+            },
+            {
+                "店名": "壮壮炒粉",
+                "地址": "校门口对面小吃街第一排",
+                "招牌菜": "牛肉炒粉(14元)",
+                "口味": "镬气十足，猛火快炒是灵魂。米粉干爽不油腻，根根分明，均匀裹上酱色。牛肉切片嫩滑，肉丝咸香，鸡蛋炒得焦香。搭配豆芽的脆、包菜丝的甜、胡萝卜丝的色彩，口感丰富。是深夜慰藉心灵的碳水炸弹，锅气扑面而来",
+                "菜单": {
+                    "肉丝炒粉": { "价格": "10元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.yI36DZZMGPVfE2022cIF2gHaE8?w=285&h=190&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "鸡蛋炒粉": { "价格": "8元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.p3iEBb1h2Qe9EiGdEJLnXAHaFj?w=245&h=184&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "牛肉炒粉": { "价格": "14元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.r5V0llp0uZnq7fdkFqP_ywHaEp?w=269&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "火腿炒粉": { "价格": "9元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.9RsuJq5_R72AaXOk1-eMXQHaE8?w=258&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "虾仁炒粉": { "价格": "16元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.78WBKCJT_CpyzwZxeWOq5wHaIB?w=170&h=184&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "什锦炒粉": { "价格": "12元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.odakUzRUsDYhDqpXK2DFugHaE8?w=264&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "炒河粉": { "价格": "10元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.vKWZDu91EJ1YI96diAxlkgHaE7?w=298&h=198&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "炒米线": { "价格": "9元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.r1r_Vyo5tZhcu0GpnhZTuwHaE6?w=292&h=194&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "炒方便面": { "价格": "10元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.WEqvI_CKRcLTguve-hJzOwHaFj?w=217&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "加蛋": { "价格": "2元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.dlvkWJ0taBkn3fxBrv3OvAHaE8?w=272&h=182&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "加肉": { "价格": "5元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.NUg8tSH3oousHfVZrDSymgHaE8?w=291&h=194&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "小吃街",
+                "口味标签": ["咸香", "油香", "镬气", "夜宵"],
+                "距离": "20分钟",
+                "类型": "中餐",
+                "营业时间": "17:00-24:00",
+                "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.r5V0llp0uZnq7fdkFqP_ywHaEp?w=269&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-utensils",
+                "热销": true
+            },
+            {
+                "店名": "金牌烤鸭腿",
+                "地址": "校门口对面小吃街第一排",
+                "招牌菜": "秘制烤鸭腿(12元)",
+                "口味": "外皮焦脆如玻璃，肉质紧实多汁。鸭腿先经十余种香料的秘制卤水长时间浸泡，充分入味。烤制时刷上特调麦芽糖与酱料，反复转动，使外皮烤得通红酥脆，鸭油滋滋作响。内里肉质紧实却不柴，咸甜交织，香气扑鼻",
+                "菜单": {
+                    "秘制烤鸭腿": { "价格": "12元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.QgZuDs-_19vXC-aRCveJZwHaE8?w=274&h=183&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "烤鸭腿饭": { "价格": "16元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.emsWXsDh6-YUnAnzrvppjgHaE8?w=270&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "烤鸡腿": { "价格": "10元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.7dsoUBvGNb5jrPncum-7GwHaE8?w=257&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "烤鸡腿饭": { "价格": "14元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.n2NoGxQEJuWX-qbN9ZSRJwHaE9?w=259&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "烤鸭翅": { "价格": "6元/对", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.bTycsYXQFwHHTMKavyYt8gHaE7?w=244&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "烤鸭脖": { "价格": "5元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.pxsvw3ExfXkCnwmqakZmyQHaEJ?w=321&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "卤肉饭": { "价格": "15元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.jlK-S5KqvaGfRzOPCBEYowHaE8?w=269&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "套餐（含饮料）": { "价格": "+3元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.FlOt-sVfjwPUrskx8iRiYAHaE6?w=289&h=192&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "小吃街",
+                "口味标签": ["咸香", "咸甜", "焦脆", "酱香"],
+                "距离": "20分钟",
+                "类型": "烧烤",
+                "营业时间": "16:00-23:00",
+                "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.QgZuDs-_19vXC-aRCveJZwHaE8?w=274&h=183&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-drumstick-bite",
+                "热销": false
+            },
+            {
+                "店名": "烈火烤串",
+                "地址": "校门口对面小吃街第二排",
+                "招牌菜": "羊肉串(4元)、烤面筋(3元)",
+                "口味": "炭火烧烤，烟火气十足。羊肉串精选羊腿肉，肥瘦相间，炭火逼出羊油，滴落火中激起阵阵香气，撒上孜然、辣椒面，风味狂野。牛肉串肉质紧实。烤面筋外皮微焦起泡，内里柔软多孔，饱含酱汁。烤韭菜鲜嫩多汁，烤茄子蒜香浓郁，软烂入味",
+                "菜单": {
+                    "羊肉串": { "价格": "4元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.8ArIx0UnCJBt_XMJwGfcMAHaE7?w=275&h=184&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "牛肉串": { "价格": "4元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.mw01PFL8iZ8sKeW7Q_CBHQHaE8?w=300&h=200&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "烤面筋": { "价格": "3元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.xfDQITKZU1g4I5wJMoExVwHaEK?w=321&h=181&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "烤韭菜": { "价格": "3元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.9XnB0Vjywo2SW1d5dnuAhAHaEu?w=294&h=188&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "烤金针菇": { "价格": "3元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.EjzZtkOzXLdfgEFqPTzz7QHaE8?w=298&h=199&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "烤茄子": { "价格": "8元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.3iFYOsn9pAotgmsTqhfeUAHaE7?w=265&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "烤鸡翅": { "价格": "7元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.rsbq2fdpJl0SQ6R8KM49MgHaE8?w=243&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "烤五花肉": { "价格": "5元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.dUBX6qSJVvK62n3pQj7GbgHaE7?w=277&h=183&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "烤鱿鱼须": { "价格": "6元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.pdN3BqV2RpUp-Pid1ie5dAHaE8?w=271&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "烤馒头片": { "价格": "2元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.PPe6O0vwJ8uoNGMgIhc6DAHaE9?w=275&h=184&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "烤玉米": { "价格": "5元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.QMgwVpPuEiAAWZrIaOKz8wHaFj?w=235&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "烤土豆片": { "价格": "2元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.Chp-i6eNqehskV8I6_g51QHaE8?w=277&h=185&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "烤肠": { "价格": "4元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.juds_CG76hi-wU3hutzeaAHaE8?w=260&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "烤掌中宝": { "价格": "5元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.i_9bABKxtllJdZ8GG2bBYQHaFj?w=240&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "小吃街",
+                "口味标签": ["咸香", "香辣", "孜然风味", "炭火香"],
+                "距离": "20分钟",
+                "类型": "烧烤",
+                "营业时间": "18:00-02:00",
+                "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.i_9bABKxtllJdZ8GG2bBYQHaFj?w=240&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-fire",
+                "热销": true
+            },
+            {
+                "店名": "牛杂粉",
+                "地址": "校门口对面小吃街第二排",
+                "招牌菜": "萝卜牛杂(10元)、牛杂粉(15元)",
+                "口味": "广式风味，牛杂处理得干净无异味。牛肚厚实弹牙，牛肠软糯丰腴，牛肺爽滑，牛膀粉糯，经过长时间焖煮，极其入味，口感软烂。萝卜吸饱了浓郁鲜美的汤汁，清甜软烂，入口即化。汤底醇厚，搭配爽滑的米粉或面条，暖心暖胃",
+                "菜单": {
+                    "萝卜牛杂": { "价格": "10元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.surgE4gW_kPI33IvvHwWAgHaE8?w=263&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "牛杂粉": { "价格": "15元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.mzyPgqd0eo0nzryiZUAyzwHaEj?w=286&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "牛杂面": { "价格": "15元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.H-dKSFRW_LdMLhzkDNIfSgHaE8?w=300&h=200&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "牛杂饭": { "价格": "16元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.xHxBqsmCTvQ1zlq-rFsiVQHaFo?w=249&h=189&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "净牛杂": { "价格": "20元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.0tdOaJjeQPmzO-tWUqD6XwHaE8?w=256&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "牛腩粉": { "价格": "16元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.WwY0T6L5FoYn7wPLjrns7AHaJ4?w=131&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "牛肚粉": { "价格": "17元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.fOMtclq7yonTQNh7fAGPNQHaE8?w=298&h=199&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "加萝卜": { "价格": "3元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.ezYSwEiD9CSmEwFofLfU0QHaE8?w=276&h=184&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "加豆腐泡": { "价格": "2元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.KeYGjhaoIaNGthvqfUh-IQHaFH?w=291&h=201&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "加青菜": { "价格": "3元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.k6V6MLOCkunvZcVFOpdElgHaHx?w=169&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "辣椒酱": { "价格": "免费", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.iFj7rSsPD4KF_pZKBmZpVgHaFA?w=268&h=181&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "小吃街",
+                "口味标签": ["咸鲜", "浓郁", "软烂", "鲜美"],
+                "距离": "20分钟",
+                "类型": "中餐",
+                "营业时间": "11:00-22:00",
+                "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.surgE4gW_kPI33IvvHwWAgHaE8?w=263&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-bowl-food",
+                "热销": false
+            },
+            {
+                "店名": "鸡蛋肉堡",
+                "地址": "校门口对面小吃街第二排",
+                "招牌菜": "鸡蛋汉堡(6元)",
+                "口味": "外酥里嫩，营养便捷。特制圆形模具中，先倒入一层面糊，打入新鲜鸡蛋，加入调好味的猪肉末/鸡肉末/牛肉末，再盖上一层面糊，两面煎至金黄。外皮酥脆，内里鸡蛋嫩滑，肉馅鲜香多汁，口感层次丰富。是经典的早餐和便捷点心",
+                "菜单": {
+                    "鸡蛋汉堡": { "价格": "6元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.tngS2sqCxkxr1Yq7qB3uYQHaF7?w=231&h=184&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "鸡肉汉堡": { "价格": "8元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.eMwUFaWz8yFjOFEljwZVPAHaE7?w=273&h=183&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "牛肉汉堡": { "价格": "10元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.1ktY4UGHBDy6idKDYYMaUAHaEJ?w=328&h=185&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "猪肉汉堡": { "价格": "8元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.WyTPqAvKVRUqq7bVeo-UiAHaHa?w=184&h=185&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "培根鸡蛋堡": { "价格": "9元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.sZGovI999swy1Hh0XEFktgHaFj?w=241&h=181&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "芝士鸡蛋堡": { "价格": "8元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.r-cDV1-ezs-92ZmH9chVegHaF7?w=232&h=192&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "双蛋堡": { "价格": "7元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.rII7q4nc1MHzD6eHv2MO6gHaFj?w=234&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "豆浆": { "价格": "3元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.zQq0D86ziCf9bm6TxyFV8AHaE8?w=270&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "牛奶": { "价格": "5元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C._lm63er_1ZajUgyBD0-wvQHaE7?w=257&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "小吃街",
+                "口味标签": ["咸香", "酥脆", "嫩滑"],
+                "距离": "20分钟",
+                "类型": "西式快餐",
+                "营业时间": "06:30-20:00",
+                "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.1ktY4UGHBDy6idKDYYMaUAHaEJ?w=328&h=185&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-hamburger",
+                "热销": true
+            },
+            {
+                "店名": "麦香坊",
+                "地址": "校门口对面小吃街第二排",
+                "招牌菜": "奶香包(3元)、菠萝包(4元)",
+                "口味": "传统烘焙，每日新鲜出炉。奶香包柔软如云，拉丝效果好，奶味浓郁。菠萝包外皮酥脆香甜，呈漂亮的龟裂纹，内里面包体柔软。肠仔包咸香可口，肉松包馅料十足。价格亲民，是早餐和下午茶点的好选择，香气诱人",
+                "菜单": {
+                    "奶香包": { "价格": "3元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.n1dLJTzyE5LnulUV1XfsDgHaE8?w=238&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "菠萝包": { "价格": "4元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.5zU6YDKaIXRksvnXFjfPswHaFj?w=243&h=182&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "肠仔包": { "价格": "5元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.fmJZ3mE_nq9w6J_Njpa4yAHaJ4?w=202&h=269&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "肉松包": { "价格": "5元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.ZyOlAxuAlVeL9XG-RyKF4wHaE8?w=284&h=189&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "豆沙包": { "价格": "3元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.3RrzPr6ckkZak2as4Fy5fQHaIp?w=202&h=236&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "椰蓉包": { "价格": "4元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.gLMZB4dOefIwjIKVVAfjkQHaFN?w=227&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "芝士蛋糕": { "价格": "6元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.zRlk7KBb61sw9q9Iu8j2XAHaE7?w=280&h=187&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "蛋挞": { "价格": "3.5元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.BNw2YtGeJGZmRiHjjGCsEQHaE8?w=268&h=189&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "三明治": { "价格": "6-8元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.gHdavw2biW-3hg4HkQxGygHaFJ?w=244&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "切片吐司": { "价格": "5元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.bHI_S8SvbyNFviQkWcuddAHaFj?w=283&h=212&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "牛奶": { "价格": "5元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C._lm63er_1ZajUgyBD0-wvQHaE7?w=257&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "奶茶": { "价格": "5元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.e-CrI9gsVB7X1Vjh07vlVwHaE8?w=289&h=193&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "小吃街",
+                "口味标签": ["甜口", "咸甜", "酥香", "奶香"],
+                "距离": "20分钟",
+                "类型": "西式快餐",
+                "营业时间": "07:00-21:00",
+                "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.5zU6YDKaIXRksvnXFjfPswHaFj?w=243&h=182&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-bread-slice",
+                "热销": false
+            },
+            {
+                "店名": "火山石烤肠",
+                "地址": "校门口对面小吃街第三排",
+                "招牌菜": "原味烤肠(5元)、黑椒烤肠(6元)",
+                "口味": "肉感十足，采用纯肉肠，淀粉含量低。在高温的火山石上烤制，受热均匀，外皮形成焦脆外壳，有效锁住肉汁。一口咬下，能听到清脆的\"咔哧\"声，随即肉香四溢，汁水充盈。原味经典肉香纯粹，黑椒味辛香开胃，墨鱼肠口感Q弹独特",
+                "菜单": {
+                    "原味烤肠": { "价格": "5元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.koi0jJMUH39eNZ3yEtYH_gHaHa?w=200&h=199&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "黑椒烤肠": { "价格": "6元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.smOaKNPkdKtKkFZ5YaIGZwHaEp?w=315&h=198&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "墨鱼肠": { "价格": "7元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.sEy99Cq1loGVOWzYasu1ewHaHa?w=185&h=186&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "芝士烤肠": { "价格": "7元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C._yrfELqdcnixDFlPFnYoyAHaHa?w=192&h=192&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "麻辣烤肠": { "价格": "6元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.U-xnv1lBLMwA8ML-rfkw1QAAAA?w=182&h=182&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "脆骨肠": { "价格": "6元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.GPY4ZTPyiIHdXyPZCe4dswHaHa?w=207&h=207&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "烤肠套餐（两根+饮料）": { "价格": "12元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.RYb3DXcFH40C9e9xZvNxUAHaGS?w=225&h=191&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "小吃街",
+                "口味标签": ["咸香", "黑椒风味", "焦香", "爆汁"],
+                "距离": "20分钟",
+                "类型": "烧烤",
+                "营业时间": "10:00-22:00",
+                "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.RYb3DXcFH40C9e9xZvNxUAHaGS?w=225&h=191&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-hotdog",
+                "热销": true
+            },
+            {
+                "店名": "饭团小屋",
+                "地址": "校门口对面小吃街第三排",
+                "招牌菜": "招牌咸蛋黄饭团(12元)、鸡排饭团(10元)",
+                "口味": "糯米软糯，选用优质圆糯米，蒸得恰到好处，软糯适中且带有嚼劲。招牌咸蛋黄饭团内含一整颗流油起沙的咸蛋黄，搭配酥脆油条碎、鲜香肉松、爽脆榨菜、青瓜丝等，口感丰富，咸香可口。鸡排饭团使用现炸鸡排，外酥里嫩。便携饱腹",
+                "菜单": {
+                    "招牌咸蛋黄饭团": { "价格": "12元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.kVwhNwtg3y3iaH3qtrLyfgHaFL?w=268&h=188&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "鸡排饭团": { "价格": "10元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.Ws_wksmIECBKk9yF5feX5AHaEC?w=294&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "金枪鱼饭团": { "价格": "11元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.5YUtYctoZX_4qBKq_5LYGAHaGp?w=193&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "火腿蛋饭团": { "价格": "9元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.TZLGs-mwgb-H_f74yxokOwHaFj?w=225&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "肉松饭团": { "价格": "8元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.zvavi4piYZiGYXgdDV8eowHaE6?w=277&h=183&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "芝士爆浆饭团": { "价格": "13元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.NeTlWBBRmvLV4OMBeZ4gYgHaFL?w=255&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "卤肉饭团": { "价格": "10元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.mXXL2FWXwJaK_-wS7GioJAHaFj?w=272&h=204&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "加咸蛋黄": { "价格": "3元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.nkIvX0XewVKfRD_AXV08aAAAAA?w=283&h=191&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "加鸡排": { "价格": "5元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.Nx4rQApGNajde3NunueKAAHaEk?w=300&h=185&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "加肉松": { "价格": "2元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.reD5VQFUqBedH2mUlXYHMQHaE7?w=297&h=198&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "豆浆/奶茶": { "价格": "5元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.msxUOCaTQ8K4RVbTHMGR7gHaE8?w=253&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "小吃街",
+                "口味标签": ["咸香", "咸甜", "软糯", "饱腹"],
+                "距离": "20分钟",
+                "类型": "中餐",
+                "营业时间": "07:00-20:00",
+                "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.kVwhNwtg3y3iaH3qtrLyfgHaFL?w=268&h=188&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-bread-slice",
+                "热销": false
+            },
+            {
+                "店名": "阿婆炒粉",
+                "地址": "校门口对面小吃街第三排",
+                "招牌菜": "炒河粉(9元)",
+                "口味": "家常味道，镬气满满，充满怀旧情怀。阿婆几十年掌勺经验，火候拿捏精准。河粉炒得干爽不碎，不断不粘，豆芽爽脆，鸡蛋焦香，搭配简单的酱油和锅气，就是最令人怀念的家常味道。炒米粉和炒方便面也同样受欢迎，朴实却温暖",
+                "菜单": {
+                    "炒河粉": { "价格": "9元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.nXRZd8tQRAzo3WWrbiyH3QHaE8?w=298&h=198&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "炒米粉": { "价格": "8元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C._adie6n7M9UHrZpctqdxewHaHW?w=184&h=183&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "炒方便面": { "价格": "9元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.WEqvI_CKRcLTguve-hJzOwHaFj?w=217&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "肉丝炒河粉/米粉/方便面": { "价格": "12元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.f_uhIoRkdMKlLFi4B2l0oQHaE8?w=288&h=192&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "鸡蛋炒河粉/米粉/方便面": { "价格": "10元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.RyPnIimO5JzB2I5139bx_AHaE9?w=276&h=185&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "牛肉炒河粉/米粉/方便面": { "价格": "15元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C._adie6n7M9UHrZpctqdxewHaHW?w=184&h=183&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "什锦炒粉": { "价格": "13元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.CjKIWWTb5W1johSyb9giKwHaFD?w=259&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "免费例汤": { "价格": "0元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.SWdghWJYRqUAbPvrIo79swHaHa?w=175&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "小吃街",
+                "口味标签": ["咸香", "镬气", "家常", "怀旧"],
+                "距离": "20分钟",
+                "类型": "中餐",
+                "营业时间": "17:00-23:00",
+                "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.nXRZd8tQRAzo3WWrbiyH3QHaE8?w=298&h=198&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-utensils",
+                "热销": true
+            },
+            {
+                "店名": "蚝门盛宴",
+                "地址": "校门口对面小吃街第三排",
+                "招牌菜": "蒜蓉烤生蚝(10元/3个)",
+                "口味": "海鲜烧烤，蒜香扑鼻。生蚝现开现烤，保证新鲜，肉质饱满肥嫩，汁水丰盈。铺上满满的黄金蒜蓉酱（蒜末经油炸与生蒜混合），在炭火上炙烤，蒜香与生蚝的鲜味完美融合，香气四溢。粉丝蒸扇贝同样鲜美，蒜蓉粉丝吸饱了扇贝的汤汁，相得益彰",
+                "菜单": {
+                    "蒜蓉烤生蚝": { "价格": "10元/3个", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.2zIT71YALTtLvjgFxfQckgHaFi?w=255&h=191&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "粉丝蒸扇贝": { "价格": "12元/3个", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.K8LAb4h0l7xj848vjBnJ0AHaE7?w=273&h=182&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "烤带子": { "价格": "15元/2个", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.DxoQNRr1p52klmRY7P9a1wHaE7?w=273&h=182&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "烤青口": { "价格": "10元/3个", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.6TXdYArCoGZ7FXALiHW1EgHaEK?w=317&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "烤鱿鱼": { "价格": "15元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.a50lX_-qAtNuBUIqSo6NSAHaE7?w=303&h=202&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "烤大虾": { "价格": "5元/串", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.BTfN-cLGycnK-bZQhARseQHaE7?w=296&h=197&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "蒜蓉茄子": { "价格": "10元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.VA12KhmUsDk53xlr8r66xQHaEJ?w=290&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "蒜蓉金针菇": { "价格": "8元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.eKv3rxSNg6NiKFTzCHLdZQHaE8?w=276&h=184&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "小吃街",
+                "口味标签": ["咸鲜", "蒜香", "鲜美", "炭烤"],
+                "距离": "20分钟",
+                "类型": "烧烤",
+                "营业时间": "18:00-24:00",
+                "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.2zIT71YALTtLvjgFxfQckgHaFi?w=255&h=191&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-fish",
+                "热销": true
+            },
+            {
+                "店名": "老北京香葱饼",
+                "地址": "通往圆通快递点的小路上",
+                "招牌菜": "香葱饼(5元)",
+                "口味": "北方风味，外酥里软，葱香浓郁。面团经过反复揉捏和醒发，煎烙后层次分明，外皮金黄酥脆，内里柔软多层。撒上大量新鲜香葱和秘制椒盐，煎制过程中葱香被充分激发，香气扑鼻。千层饼同样酥香，是扎实满足的碳水快乐",
+                "菜单": {
+                    "香葱饼": { "价格": "5元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.rT7icAiCnnTLlMhPH6Gx_AHaFY?w=270&h=196&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "千层饼": { "价格": "6元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.NVtk5TUt10g8j__zgCDlMAHaEJ?w=328&h=184&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "酱香饼": { "价格": "6元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.LDi7yybwnpRRTWt_OteC1wHaFi?w=232&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "鸡蛋灌饼": { "价格": "7元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.FRTMAigl864tLHQrTtIyNQAAAA?w=307&h=197&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "手抓饼": { "价格": "6元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.FRTMAigl864tLHQrTtIyNQAAAA?w=307&h=197&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "豆浆": { "价格": "3元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.Qzu98RXlVHIBWQtV_5HbrQHaE8?w=269&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "小米粥": { "价格": "3元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.ji-8hpESg7oeOay1RADCgQHaE7?w=282&h=187&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "圆通小路",
+                "口味标签": ["咸香", "葱香", "酥脆", "层次丰富"],
+                "距离": "22分钟",
+                "类型": "中餐",
+                "营业时间": "07:00-19:00",
+                "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.rT7icAiCnnTLlMhPH6Gx_AHaFY?w=270&h=196&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-bread-slice",
+                "热销": false
+            },
+            {
+                "店名": "土家酱香饼",
+                "地址": "通往圆通快递点的小路上",
+                "招牌菜": "酱香饼(6元)",
+                "口味": "土家特色，酱料是灵魂。饼胚外酥内软，层次丰富，薄如蝉翼。刷上秘制的咸香酱料（以豆瓣酱、甜面酱等为基础调制），撒上芝麻和葱花，风味独特，咸中带微甜，酱香浓郁。是边走边吃的美味小吃，也可作为主食，回味无穷",
+                "菜单": {
+                    "酱香饼": { "价格": "6元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.LDi7yybwnpRRTWt_OteC1wHaFi?w=232&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "香辣酱香饼": { "价格": "7元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.LDi7yybwnpRRTWt_OteC1wHaFi?w=232&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "甜面酱香饼": { "价格": "6元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.LDi7yybwnpRRTWt_OteC1wHaFi?w=232&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "半张": { "价格": "3元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.LDi7yybwnpRRTWt_OteC1wHaFi?w=232&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "豆浆": { "价格": "3元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.Qzu98RXlVHIBWQtV_5HbrQHaE8?w=269&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "圆通小路",
+                "口味标签": ["咸香", "酱香", "酥脆", "咸甜"],
+                "距离": "22分钟",
+                "类型": "中餐",
+                "营业时间": "07:00-19:00",
+                "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.LDi7yybwnpRRTWt_OteC1wHaFi?w=232&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-bread-slice",
+                "热销": true
+            },
+            {
+                "店名": "爆脆炸鸡",
+                "地址": "通往圆通快递点的小路上",
+                "招牌菜": "无骨炸鸡(15元)",
+                "口味": "外皮超脆，鸡肉多汁，现点现炸。鸡肉选用鸡腿肉，腌制入味。外裹特调粉浆，高温快炸，形成金黄酥脆的外壳，咬下去咔哧作响。内里鸡肉鲜嫩多汁，完全不柴。可选多种撒粉口味，如经典椒盐、劲爆香辣、酸甜甘梅等，满足不同喜好",
+                "菜单": {
+                    "无骨炸鸡": { "价格": "15元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.r4uZeR0R0rqU4ra7yOxKSgHaE8?w=276&h=184&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "鸡米花": { "价格": "10元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.WHikw3lODzPpygZXI2QkZwHaE8?w=264&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "薯条": { "价格": "8元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.FuMa3d8i4y2EAXlvApg3tAHaE7?w=278&h=185&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "汉堡": { "价格": "12元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.fSF0ZDIagd6RfdV0V8sSxQHaE7?w=255&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "香辣鸡翅": { "价格": "10元/对", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.I2zIAfzV1ka9FRkrLzaNHgHaEJ?w=323&h=181&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "上校鸡块": { "价格": "8元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.oLtP4wtbeWzf12b5cpummgHaE7?w=303&h=201&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "洋葱圈": { "价格": "6元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.AJHigvkhGJJz2YwtzcRe1wHaE7?w=291&h=194&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "地瓜条": { "价格": "7元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.rdrRvb2dY4nsHmIVQHpGsAHaHa?w=199&h=199&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "可乐/雪碧": { "价格": "4元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.m2RLmL3_IpNPDsHO-vZsmwHaE8?w=274&h=183&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "圆通小路",
+                "口味标签": ["咸香", "香辣", "酥脆", "多汁"],
+                "距离": "22分钟",
+                "类型": "西式快餐",
+                "营业时间": "10:00-22:00",
+                "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.r4uZeR0R0rqU4ra7yOxKSgHaE8?w=276&h=184&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-drumstick-bite",
+                "热销": true
+            },
+            {
+                "店名": "港式滑蛋饭",
+                "地址": "通往圆通快递点的小路上",
+                "招牌菜": "虾仁滑蛋饭(18元)、牛肉滑蛋饭(16元)",
+                "口味": "港式风味，滑蛋嫩滑是精髓。鸡蛋炒得极其嫩滑，近乎流心状态，包裹着米饭。虾仁Q弹大颗，牛肉切片鲜嫩，叉烧蜜汁香甜。淋上特制豉油或蚝油芡汁，咸鲜适口，与米饭和滑蛋搅拌均匀，口感顺滑，味道鲜美，营养丰富",
+                "菜单": {
+                    "叉烧滑蛋饭": { "价格": "15元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.qCmo7Km6ksB8iNUp0CkJ_QHaE8?w=270&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "虾仁滑蛋饭": { "价格": "18元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.CTQo_APwknGzZrKl7bBFmwHaE8?w=302&h=201&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "牛肉滑蛋饭": { "价格": "16元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.1PIUsQbCMjWHKF5_5cFoCAAAAA?w=242&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "午餐肉滑蛋饭": { "价格": "14元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.xImM2prAPz8KBi2EwonCuQHaJ4?w=159&h=210&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "豉汁排骨滑蛋饭": { "价格": "17元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.l9g1n-0doX3zKCb53ASECwHaHa?w=179&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "香菇滑鸡滑蛋饭": { "价格": "16元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.1nHifmAhErwRZR9UgrMlogHaFp?w=256&h=195&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "白灼时蔬": { "价格": "6元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.YC5jmOrWb-WNx7jPPdgVbgHaE9?w=284&h=189&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "例汤": { "价格": "5元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.0YqCaUv-Fcik0Kggb_699AHaGs?w=197&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "圆通小路",
+                "口味标签": ["咸鲜", "咸甜", "嫩滑", "鲜美"],
+                "距离": "22分钟",
+                "类型": "中餐",
+                "营业时间": "11:00-20:30",
+                "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.qCmo7Km6ksB8iNUp0CkJ_QHaE8?w=270&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-egg",
+                "热销": false
+            },
+            {
+                "店名": "天天鲜果",
+                "地址": "通往圆通快递点的小路上",
+                "招牌菜": "水果切盒(8元)、鲜榨果汁(10元)",
+                "口味": "新鲜现切，健康解渴。水果每日采购，保证新鲜度。切盒搭配多种时令水果，如清甜西瓜、蜜甜哈密瓜、酸甜菠萝、爽口火龙果、多汁橙子等，色彩缤纷，维生素丰富。鲜榨果汁不加水不加糖，原汁原味，健康营养，是逛街时的清爽选择",
+                "菜单": {
+                    "水果切盒": { "价格": "8元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.1Ky_ZCXSCTnG0rGPOjYn_QHaHa?w=207&h=207&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "鲜榨果汁": { "价格": "10元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.f5LNtpevW4JyHZKA-v_WXwHaFY?w=250&h=182&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "整果销售": { "价格": "时价", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.1Ky_ZCXSCTnG0rGPOjYn_QHaHa?w=207&h=207&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "水果沙拉": { "价格": "12元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.QHAkOQyFbyP3mJGRWgYZBwHaE8?w=232&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "酸奶水果捞": { "价格": "15元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.FE_M-rG0Q3mD9Is7YI_WOwHaE8?w=297&h=198&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "冰糖葫芦": { "价格": "5元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.sjK8fAS_TkWvAxhYI6Lq-gHaE8?w=286&h=190&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "果干": { "价格": "8-15元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.jkDHjLdEuCwI6TRo6Qh3ggHaE7?w=303&h=202&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "圆通小路",
+                "口味标签": ["清甜", "酸甜", "新鲜", "健康"],
+                "距离": "22分钟",
+                "类型": "饮品店",
+                "营业时间": "08:00-21:00",
+                "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.jkDHjLdEuCwI6TRo6Qh3ggHaE7?w=303&h=202&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-apple-alt",
+                "热销": true
+            },
+            {
+                "店名": "王记炒粉",
+                "地址": "校门口对面，偏右侧",
+                "招牌菜": "特色炒粉(10元)",
+                "口味": "本地人气，镬气足，分量大是特色。老板王师傅炒粉多年，手艺精湛，对火候掌控极好。米粉、河粉、米饭炒得干香，配料给得足，分量超大，性价比极高。是附近学生和居民常光顾的摊位，充满了街坊邻里的烟火气息",
+                "菜单": {
+                    "特色炒粉": { "价格": "10元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.I5i4o6INm2j8j61mo1QbFAHaEr?w=283&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "炒饭": { "价格": "9元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.xddN2uqYmIyXpjEgsHzJYQHaEJ?w=319&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "肉丝炒粉/饭": { "价格": "12元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.I5i4o6INm2j8j61mo1QbFAHaEr?w=283&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "鸡蛋炒粉/饭": { "价格": "10元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.I5i4o6INm2j8j61mo1QbFAHaEr?w=283&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "牛肉炒粉/饭": { "价格": "15元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.I5i4o6INm2j8j61mo1QbFAHaEr?w=283&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "火腿炒饭": { "价格": "11元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.xddN2uqYmIyXpjEgsHzJYQHaEJ?w=319&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "扬州炒饭": { "价格": "13元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.xddN2uqYmIyXpjEgsHzJYQHaEJ?w=319&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "加蛋": { "价格": "2元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.z0l0UuFCFclxZ20CnVS0OgHaE8?w=273&h=182&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "加肉": { "价格": "5元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.NUg8tSH3oousHfVZrDSymgHaE8?w=291&h=194&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "校门口右侧",
+                "口味标签": ["咸香", "油香", "镬气", "分量足"],
+                "距离": "20分钟",
+                "类型": "中餐",
+                "营业时间": "17:00-23:00",
+                "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.I5i4o6INm2j8j61mo1QbFAHaEr?w=283&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-utensils",
+                "热销": true
+            },
+            {
+                "店名": "正新鸡排",
+                "地址": "校门口对面，偏右侧",
+                "招牌菜": "正新鸡排(12元)",
+                "口味": "全国连锁，大鸡排，香酥可口。鸡排大片厚实，比脸还大。外皮裹粉酥脆，内里鸡肉鲜嫩多汁。撒上椒盐、辣椒粉或甘梅粉，风味更佳。汉堡、烤串、鸡米花等小食也种类丰富，价格实惠，满足食肉爱好者的需求",
+                "菜单": {
+                    "正新鸡排": { "价格": "12元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.gM8Fw7leKntASdmbQ9ehmAHaE8?w=244&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "汉堡": { "价格": "15元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.-XSGU6rr0fKVJctpjO5yYwHaE7?w=277&h=185&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "烤串": { "价格": "3-6元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.PxOXRV_1XwMMl6TGuiy3gAHaEK?w=312&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "鸡米花": { "价格": "10元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.ZrxOOEy4LjUke9-Aa0HxrAHaF-?w=247&h=198&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "盐酥鸡": { "价格": "10元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.IB4E4s5d195NmS-ZjxiLcwHaHa?w=202&h=202&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "薯条": { "价格": "8元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.9nxz4dCky77JZdtb0vHArgHaEJ?w=329&h=185&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "奶茶": { "价格": "6元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.e-CrI9gsVB7X1Vjh07vlVwHaE8?w=289&h=193&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "可乐": { "价格": "4元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.I8_Kr4AuytgVtkrhKDAaqAHaEq?w=290&h=182&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "校门口右侧",
+                "口味标签": ["咸香", "香辣", "酥脆", "连锁品牌"],
+                "距离": "20分钟",
+                "类型": "西式快餐",
+                "营业时间": "10:00-22:00",
+                "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.gM8Fw7leKntASdmbQ9ehmAHaE8?w=244&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-drumstick-bite",
+                "热销": true
+            },
+            {
+                "店名": "百味糖水",
+                "地址": "校门口对面，偏右侧",
+                "招牌菜": "芋圆一号(12元)、冰糖炖雪梨(8元)",
+                "口味": "传统糖水，用料丰富，滋润养生。芋圆一号内含手工芋圆、软糯红豆、嫩滑仙草、Q弹珍珠、薏米等，口感丰富，甜而不腻。冰糖炖雪梨清甜润肺，梨肉软烂，适合干燥季节。红豆沙、绿豆沙细腻顺滑，是经典广式糖水，饭后佳品",
+                "菜单": {
+                    "芋圆一号": { "价格": "12元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.rxdZdLAM6YTAt0MekIQQkgHaHa?w=204&h=204&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "冰糖炖雪梨": { "价格": "8元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.D0bJxFKk0qktVVGHJCJOMQHaFj?w=249&h=186&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "桂花红豆沙": { "价格": "7元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.9kaLU9I1lOhY-u8z0_5tZAHaFj?w=234&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "绿豆沙": { "价格": "6元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.tH12uBqTzHch9G9yttbpqgHaE5?w=280&h=185&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "双皮奶": { "价格": "10元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.8iCj87figzuZGfQdZNes9AHaEK?w=313&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "姜撞奶": { "价格": "12元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.aiBKzkCHmDbO5OUO2xsxhAHaEK?w=294&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "杨枝甘露": { "价格": "15元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.q04p5nRMrtNK4pr1pYJ6cgHaFX?w=202&h=146&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "烧仙草": { "价格": "10元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.N3P-0ytAoNB0cH3ktuApCgHaE6?w=263&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "芝麻糊": { "价格": "8元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.Kp5W_62axVDcUkix9ENJTQHaHa?w=204&h=204&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "杏仁茶": { "价格": "9元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.ICjaoGGcPr6D15ekr15MGQHaHa?w=192&h=192&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "校门口右侧",
+                "口味标签": ["甜口", "清新", "滋润", "养生"],
+                "距离": "20分钟",
+                "类型": "饮品店",
+                "营业时间": "10:00-22:00",
+                "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.ICjaoGGcPr6D15ekr15MGQHaHa?w=192&h=192&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-ice-cream",
+                "热销": false
+            },
+            {
+                "店名": "深井烧鹅",
+                "地址": "校门口对面，偏右侧",
+                "招牌菜": "深井烧鹅饭(20元)",
+                "口味": "港式烧腊，鹅皮脆亮如琥珀，肉质肥美多汁。烧鹅选用黑棕鹅，经过充气、烫皮、上皮水、风干等多道工序，放入特制烤炉中悬挂烤制。外皮烤得通红脆亮，油脂丰富，入口即化。肉质紧实，带有独特的果木香气。搭配酸梅酱，解腻增香，风味绝佳",
+                "菜单": {
+                    "深井烧鹅饭": { "价格": "20元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.YKk9tWqCY0xDuyr8YsPTbAHaEl?w=292&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "烧鸭饭": { "价格": "16元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.pC-zhOwNxKpPbBET8i8sfQAAAA?w=253&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "叉烧饭": { "价格": "15元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.OV47ePJGUnRdw1ucBYYLQAHaE8?w=279&h=186&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "白切鸡饭": { "价格": "15元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.5pMEAAmyJ2wdNwteW3DU9AHaFj?w=257&h=192&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "豉油鸡饭": { "价格": "16元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.zJsH1yJBxTpqw8mEgLBE2QHaE8?w=298&h=198&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "双拼饭": { "价格": "17元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.8Gqym4Ox4xxvEc-sBYYoOAHaE8?w=292&h=195&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "三宝饭": { "价格": "18元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.eLvnG1spp5sNJoVqn_juAQHaE7?w=302&h=201&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "例汤": { "价格": "5元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.0YqCaUv-Fcik0Kggb_699AHaGs?w=197&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "校门口右侧",
+                "口味标签": ["咸香", "咸甜", "皮脆肉嫩", "油脂香"],
+                "距离": "20分钟",
+                "类型": "中餐",
+                "营业时间": "11:00-20:30",
+                "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.YKk9tWqCY0xDuyr8YsPTbAHaEl?w=292&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-drumstick-bite",
+                "热销": true
+            },
+            {
+                "店名": "一茶知秋",
+                "地址": "校门口对面，赵一鸣零食店旁",
+                "招牌菜": "芝士奶盖茶(12元)、水果茶(15元)",
+                "口味": "新式茶饮，选用优质茶叶现泡，茶底清新醇厚。芝士奶盖采用进口奶油奶酪与淡奶油打发，咸香浓郁，口感绵密细腻，与清茶形成完美层次。水果茶采用当日新鲜水果，果香四溢，清爽解腻，甜度可选，满足不同口味需求",
+                "菜单": {
+                    "芝士奶盖茶": { "价格": "12元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.WtdpBzZ2FY7IpmGuUR6rGgHaFN?w=277&h=194&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "水果茶": { "价格": "15元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.ywKRPKEb6wE2rOAp_MC0NgHaE7?w=296&h=197&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "珍珠奶茶": { "价格": "10元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.K9am9J1XzgwJGsGUiAd1DAHaHc?w=184&h=185&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "四季春茶": { "价格": "8元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.oH_jDcCDkhrpYCPfvtypiAHaHa?w=195&h=195&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "芋圆奶茶": { "价格": "13元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.46tMUBKWIljfTcadkbzX6AHaJ4?w=202&h=269&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "黑糖波波牛乳": { "价格": "16元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.stJskuNAUCI2Y9iWbDdqUgHaLH?w=202&h=303&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "杨枝甘露": { "价格": "18元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.q04p5nRMrtNK4pr1pYJ6cgHaFX?w=202&h=146&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "满杯红柚": { "价格": "14元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.DgzT7prTNWNWqKCfoVdcbQHaLG?w=202&h=303&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "柠檬绿茶": { "价格": "10元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.p7tyNsY95NtwyiXZLe8rEwHaNH?w=187&h=332&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "椰椰奶茶": { "价格": "12元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.pCPpxp9nWxGrDBLjWXK_zAHaEK?w=290&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "红豆布丁奶茶": { "价格": "11元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.g-KjT7PaR5m46-YRKHcAbwHaLJ?w=202&h=304&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "奥利奥奶茶": { "价格": "13元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.C2CSLDZYVPC0RE62P2eNFQHaLm?w=199&h=312&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "烧仙草": { "价格": "15元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.8ZOuiRqWw4xsJw2-JNPh0AEsDI?w=262&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "奶盖绿茶": { "价格": "11元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.77gJ8fNiC08XTuZJ4DNRLAHaFk?w=267&h=201&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "奶盖红茶": { "价格": "11元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.sw9ZNgEhh2cDJIMmingnwQHaKK?w=127&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "西柚多多": { "价格": "14元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.LWePUsHisQ0_sO5FQt5I4gHaE8?w=296&h=197&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "赵一鸣旁",
+                "口味标签": ["甜口", "茶香", "清新", "奶香", "果香"],
+                "距离": "23分钟",
+                "类型": "饮品店",
+                "营业时间": "10:00-22:30",
+                "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.77gJ8fNiC08XTuZJ4DNRLAHaFk?w=267&h=201&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-mug-hot",
+                "热销": true
+            },
+            {
+                "店名": "冰雪之城",
+                "地址": "校门口对面，赵一鸣零食店旁",
+                "招牌菜": "手工冰淇淋(6元)、圣代(10元)",
+                "口味": "奶味浓郁，口感绵密顺滑。采用新鲜牛奶和动物奶油制作，不含冰渣。手工冰淇淋口感扎实，香草味醇厚，巧克力味浓郁微苦，草莓味酸甜清新，抹茶味茶香清雅。圣代搭配浓稠果酱、酥脆坚果碎和软绵奶油，口感层次极为丰富，是夏日解暑神器",
+                "菜单": {
+                    "手工冰淇淋": { "价格": "6元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C._h2-TvyKfT-jU4Z4339qzgHaE8?w=267&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "圣代": { "价格": "10元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.WZ5qP4GTC3nYVp85RZeK0wHaE7?w=283&h=189&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "冰淇淋球": { "价格": "5元/个", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.WZ5qP4GTC3nYVp85RZeK0wHaE7?w=283&h=189&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "甜筒": { "价格": "4元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.mue3U5uPpfPQ4N6fN1Ql3gHaHw?w=170&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "冰淇淋杯": { "价格": "8元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C._lRuU3UoZTvG7K3sstYu-wHaEK?w=299&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "华夫饼冰淇淋": { "价格": "15元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.9ie8Yt1ZOY4vDhkWBBh7FwHaE5?w=275&h=182&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "香蕉船": { "价格": "20元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.upmZShCl1CHjqsGoleIlPAHaFj?w=222&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "暴风雪系列": { "价格": "12-18元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.m3aHsrmAOONoG5bwKuE00gHaFj?w=216&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "奶昔": { "价格": "10元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.jdluiSQV3YNdKtmPm5KmLQHaJ4?w=122&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "冰淇淋咖啡": { "价格": "12元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.oIo19JybGzZ4aJYQOtw4JwHaE7?w=301&h=201&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "绵绵冰": { "价格": "15-20元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.fqDADu8ny13Hbhj-Qy8v1wHaE8?w=264&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "鸡蛋仔冰淇淋": { "价格": "16元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.2YnaUkDbERKipsWhMvNyIAHaKD?w=202&h=275&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "赵一鸣旁",
+                "口味标签": ["甜口", "奶香", "冰凉", "绵密", "顺滑"],
+                "距离": "23分钟",
+                "类型": "饮品店",
+                "营业时间": "10:00-22:00",
+                "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.2YnaUkDbERKipsWhMvNyIAHaKD?w=202&h=275&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-ice-cream",
+                "热销": true
+            },
+            {
+                "店名": "煲煲香",
+                "地址": "校门口对面，赵一鸣零食店旁",
+                "招牌菜": "鸡公煲(25元)、牛杂煲(28元)",
+                "口味": "煲类专门，所有煲仔皆以砂锅呈上，热气腾腾，锁住食材原味。鸡公煲酱香浓郁，鸡肉紧实入味，酱汁咸鲜微辣，十分下饭。牛杂煲牛肚厚实、牛肠软糯、牛腩酥烂，搭配吸饱汤汁的萝卜，清甜鲜美。可自选多种配菜，在浓郁汤汁中越煮越香",
+                "菜单": {
+                    "鸡公煲": { "价格": "25元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.GmtI3uJqpkmmHhq3CrmTpgHaFW?w=228&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "牛杂煲": { "价格": "28元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.5eySjionVEh0ShbmCp2XfwHaEl?w=315&h=195&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "牛杂粉": { "价格": "15元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.RdXdzXlIQSFjBp3IEdpJmAHaE7?w=263&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "排骨煲": { "价格": "26元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.2smxYiE-ZMYI1YseZzSNswHaE8?w=284&h=189&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "配菜-土豆": { "价格": "3元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.lvWg6SndBhgxT_osRz438wHaEe?w=304&h=183&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "配菜-宽粉": { "价格": "4元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.8_H72vQHzv7JiEseT1PlkAHaE8?w=303&h=202&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "配菜-金针菇": { "价格": "4元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.X8X1BBs3E8GaNDUHFOs0BgHaFm?w=228&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "配菜-豆腐泡": { "价格": "3元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.KeYGjhaoIaNGthvqfUh-IQHaFH?w=291&h=201&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "配菜-青菜": { "价格": "3元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.MkOPjU1_K4kr6HuRYBn1EQHaE8?w=268&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "配菜-腐竹": { "价格": "4元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.McgDEm7QIu0KSwJazQ9ymAAAAA?w=233&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "配菜-午餐肉": { "价格": "5元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.6u0HpE3t8tS7_rVifjJkeAHaE8?w=284&h=189&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "肥肠煲": { "价格": "28元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.iVGvEwUIlCUpfgIZ8b4w5wHaFj?w=263&h=197&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "海鲜煲": { "价格": "35元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.tPeb5WDH0jVhakGkPbKvdgHaE8?w=256&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "番茄牛腩煲": { "价格": "26元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.KNJMTqmLD9WhRtqtp1xxMAHaFG?w=282&h=194&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "米饭": { "价格": "2元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.elgtuuR8Fg2cEaesOdOJqgHaHa?w=194&h=194&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "赵一鸣旁",
+                "口味标签": ["咸香", "酱香", "浓郁", "热辣", "鲜美"],
+                "距离": "23分钟",
+                "类型": "中餐",
+                "营业时间": "11:00-21:00",
+                "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.GmtI3uJqpkmmHhq3CrmTpgHaFW?w=228&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-pot-food",
+                "热销": false
+            },
+            {
+                "店名": "螺鼎记",
+                "地址": "校门口对面，赵一鸣零食店旁",
+                "招牌菜": "招牌螺蛳粉(16元)",
+                "口味": "螺蛳粉专营，汤底是灵魂。每日用石螺、猪筒骨及十余种香料熬制数小时，汤色浓郁，螺味鲜醇。酸笋发酵到位，酸脆爽口，气味地道。米粉爽滑弹牙，炸腐竹香脆，花生米酥香。辣度、酸度、酸笋量均可调整，炸蛋吸饱汤汁后风味绝佳",
+                "菜单": {
+                    "招牌螺蛳粉": { "价格": "16元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.mc2hvc-Xl-XW844mae4htwHaHa?w=164&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "原味螺蛳粉": { "价格": "14元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.oBCKnXXnbBlGlRTSNbNZUQHaE8?w=263&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "加炸蛋": { "价格": "3元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.OLFwqUqWK9GF_ktf02SGoAHaFj?w=252&h=188&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "加鸭脚": { "价格": "4元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.sMe8g7ml8BqDv8xRjPkBqAHaE8?w=258&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "加腐竹": { "价格": "2元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.QamIyRM4vDjvU2yJ8JtKVgHaE7?w=286&h=191&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "加豆泡": { "价格": "2元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.ioF2irEuQz11najwUAyZRAHaC9?w=322&h=140&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "加猪蹄": { "价格": "10元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.LefJgQq3ew7jhQa0dTXPDQHaE8?w=260&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "加肥肠": { "价格": "8元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.u2ct-rQoPc-59PxDnh6WhgHaE7?w=285&h=190&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "加青菜": { "价格": "3元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.P_ogpjUZIiCiPPTC4bsCXAHaEK?w=318&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "干捞螺蛳粉": { "价格": "16元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.TSu6fSKilJg2YFX2rUDejwHaE6?w=273&h=181&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "炒螺蛳粉": { "价格": "18元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.F-_RE51boYa_pzR25yJ4YAHaFj?w=261&h=196&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "螺蛳土豆粉": { "价格": "16元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.3IcUcK0HZf1vB2D-v4s2HgHaE8?w=285&h=190&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "卤鸡腿": { "价格": "7元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.20H5EIaaMKqSkddqna_tqgEzDL?w=265&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "绿豆沙": { "价格": "5元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.tH12uBqTzHch9G9yttbpqgHaE5?w=280&h=185&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "赵一鸣旁",
+                "口味标签": ["酸辣", "咸香", "鲜美", "爽滑", "浓郁"],
+                "距离": "23分钟",
+                "类型": "中餐",
+                "营业时间": "10:00-21:30",
+                "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.mc2hvc-Xl-XW844mae4htwHaHa?w=164&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-bowl-rice",
+                "热销": true
+            },
+            {
+                "店名": "山城小面",
+                "地址": "校门口对面，赵一鸣零食店旁",
+                "招牌菜": "重庆小面(12元)、豌杂面(14元)",
+                "口味": "重庆麻辣风味，注重调料。花椒的麻、辣椒的辣、红油的香、姜蒜的辛、花生芝麻的醇，十几种佐料共同构成复合型麻辣口感。面条为定制的碱水面，筋道有力。豌杂面中耙豌豆软烂成泥，杂酱炒制干香；肥肠面肥肠处理得干净，卤香浓郁；红油香浓，令人食欲大开",
+                "菜单": {
+                    "重庆小面": { "价格": "12元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.oXNDGyyEDfz5PDYazOSY6gHaFI?w=255&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "豌杂面": { "价格": "14元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.gzrjV-PKEcISimDcCVpBlgHaHa?w=173&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "肥肠面": { "价格": "16元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.YRQ4AmBiQDHIzpIdE4ZOXAHaE7?w=289&h=192&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "牛肉面": { "价格": "15元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.FFv9Sh4QuRFlIvvM-bEe4QHaE7?w=263&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "抄手": { "价格": "12元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.1Wu8551znA7xVR21SyaGoAHaE7?w=283&h=187&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "担担面": { "价格": "14元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.q-IXCFM20tyLbyYatFaVVgHaEJ?w=296&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "宜宾燃面": { "价格": "15元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.Y6_AZViB9NM0ggQciKuqjQHaEK?w=333&h=187&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "鸡公面": { "价格": "16元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.L1pIqVa9jCW0tlneTXmdwQHaFH?w=291&h=201&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "酸菜肉丝面": { "价格": "13元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.wMoyN7drBxNq5wFh7jzcIgHaE8?w=279&h=186&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "凉拌黄瓜": { "价格": "6元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.nqwlTfKySxRzIgdkDhWZpgHaE8?w=296&h=198&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "卤豆干": { "价格": "4元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.d1hFAlWU_9GSSp90NpmGrgHaGq?w=201&h=181&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "冰粉": { "价格": "8元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.2m7YjJsULNZxhCP00MMiHgHaE7?w=280&h=187&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "口水鸡": { "价格": "20元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.L-50XJyukdiRoeaZc6gPmwHaEf?w=319&h=193&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "泡菜": { "价格": "2元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C._rmAeP-aZugsWi4mxbsFWAHaEr?w=268&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "赵一鸣旁",
+                "口味标签": ["麻辣", "咸香", "红油", "劲爽", "鲜香"],
+                "距离": "23分钟",
+                "类型": "中餐",
+                "营业时间": "07:00-21:00",
+                "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.oXNDGyyEDfz5PDYazOSY6gHaFI?w=255&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-bowl-food",
+                "热销": true
+            },
+            {
+                "店名": "广式煲仔饭",
+                "地址": "校门口对面偏左侧潮街内",
+                "招牌菜": "腊味煲仔饭(18元)、窝蛋牛肉煲仔饭(20元)",
+                "口味": "广式经典风味，米饭选用丝苗米，粒粒分明，底部形成金黄酥脆的锅巴，腊味油润咸香，窝蛋牛肉滑嫩多汁，酱汁浓郁回甜",
+                "菜单": {
+                    "腊味煲仔饭": { "价格": "18元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.UvGjMLVxdgjvjPg_0J7q-wHaE7?w=259&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "滑鸡煲仔饭": { "价格": "17元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.X0UKjQ9a65dOwkrX4mUwvQHaE8?w=293&h=196&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "窝蛋牛肉煲仔饭": { "价格": "20元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.pxW8uJe-_-DZYgPheQThuwHaE8?w=292&h=195&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "排骨煲仔饭": { "价格": "19元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.g6_DDx6EDB3i2UuyQqKLfwHaEf?w=306&h=185&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "北菇滑鸡煲仔饭": { "价格": "18元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.X0UKjQ9a65dOwkrX4mUwvQHaE8?w=289&h=193&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "豉汁排骨煲仔饭": { "价格": "19元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.QoBscx5PKDy0nsWQOP1RxgHaE8?w=294&h=196&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "梅菜扣肉煲仔饭": { "价格": "21元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.Ck5yJ3DB3kWdyK_5mUgwoAHaE8?w=273&h=182&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "海鲜煲仔饭": { "价格": "23元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.M6YFzATkHfVk0PIBguI7eAHaE7?w=286&h=191&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "潮街",
+                "口味标签": ["咸香", "咸甜", "焦香", "油润"],
+                "距离": "25分钟",
+                "类型": "中餐",
+                "营业时间": "10:30-21:00",
+                "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.UvGjMLVxdgjvjPg_0J7q-wHaE7?w=259&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-pot-food",
+                "热销": true
+            },
+            {
+                "店名": "烤肉拌饭",
+                "地址": "校门口对面偏左侧潮街内",
+                "招牌菜": "照烧鸡腿烤肉拌饭(16元)",
+                "口味": "烤肉外焦里嫩，酱汁浓郁入味，照烧风味甜中带咸，蜜汁猪肉香软不腻，香辣鸡肉辣中带麻，搭配新鲜蔬菜与米饭拌匀，口感层次丰富",
+                "菜单": {
+                    "照烧鸡腿烤肉拌饭": { "价格": "16元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.G4jcI95JyTpRYigSungMjQHaE8?w=286&h=191&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "蜜汁猪肉烤肉拌饭": { "价格": "15元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.ChppuRGGhhvWsGrvnQAVJwHaE7?w=290&h=192&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "香辣鸡肉烤肉拌饭": { "价格": "16元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.iRRKQbt8JuVzS9Ws_48WZwHaEJ?w=322&h=181&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "双拼烤肉拌饭": { "价格": "18元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.cqOgtLt5kJQkXK8Mpx0gmwHaFj?w=241&h=181&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "韩式泡菜烤肉拌饭": { "价格": "17元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.sD_a6-UxfcoFqiDU826vrQHaFj?w=213&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "黑椒牛肉烤肉拌饭": { "价格": "19元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.0bJFwm-7HYKQy99TCTEpygHaE7?w=273&h=182&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "孜然羊肉烤肉拌饭": { "价格": "20元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.7qQ-e4ulzzACpPAjgKqpfQHaFj?w=252&h=189&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "潮街",
+                "口味标签": ["咸甜", "咸香", "香辣", "酱香"],
+                "距离": "25分钟",
+                "类型": "中餐",
+                "营业时间": "10:00-20:30",
+                "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.7qQ-e4ulzzACpPAjgKqpfQHaFj?w=252&h=189&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-utensils",
+                "热销": false
+            },
+            {
+                "店名": "老街小面",
+                "地址": "校门口对面偏左侧潮街内",
+                "招牌菜": "重庆小面(12元)、红油抄手(14元)",
+                "口味": "川渝地道风味，汤底麻辣鲜香，红油浓郁，花椒麻而不燥，面条筋道有嚼劲，抄手皮薄馅多，酸辣粉酸爽开胃，肥肠软糯入味",
+                "菜单": {
+                    "重庆小面": { "价格": "12元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.oXNDGyyEDfz5PDYazOSY6gHaFI?w=255&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "红油抄手": { "价格": "14元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.RkTx0whg36ByFXuMt1QyNAHaHa?w=197&h=197&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "豌杂面": { "价格": "15元", "图片": "https://tse2-mm.cn.bing.net/th/id/OIP-C.UtbuIFtthHPRTU_W05xQdwHaE8?w=260&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "肥肠面": { "价格": "16元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.YRQ4AmBiQDHIzpIdE4ZOXAHaE7?w=289&h=192&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "酸辣粉": { "价格": "13元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.UpMCydtVesr7wCwlGyHMyQHaE7?w=253&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "担担面": { "价格": "14元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.kubFq9-vMhrGX0domCI2LwAAAA?w=277&h=185&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "麻辣牛肉面": { "价格": "18元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.qiRAaQX0DpTwc9EKkVXHdwHaE8?w=288&h=192&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "口水鸡拌面": { "价格": "16元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.PHjcR96693aypKQLu9x1YwHaE7?w=274&h=182&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" }
+                },
+                "区域": "潮街",
+                "口味标签": ["麻辣", "咸香", "酸辣", "鲜香"],
+                "距离": "25分钟",
+                "类型": "中餐",
+                "营业时间": "08:00-21:00",
+                "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.PHjcR96693aypKQLu9x1YwHaE7?w=274&h=182&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-bowl-food",
+                "热销": true
+            },
+            {
+                "店名": "黄氏螺蛳粉",
+                "地址": "校门口对面偏左侧潮街内",
+                "招牌菜": "经典螺蛳粉(15元)",
+                "口味": "汤底酸辣鲜爽，螺香浓郁，米粉Q弹爽滑，酸笋脆嫩开胃，腐竹吸汁入味，炸蛋外酥内软，可根据喜好调节辣度与酸度，风味地道",
+                "菜单": {
+                    "经典螺蛳粉": { "价格": "15元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.3kJJyWtihwZtf8sIGJNI5AHaHa?w=203&h=203&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "三鲜螺蛳粉": { "价格": "17元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.Yj2lIKXoV8hPwwQCXuSUXwHaGP?w=215&h=181&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "招牌螺蛳粉": { "价格": "16元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.mc2hvc-Xl-XW844mae4htwHaHa?w=164&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "干捞螺蛳粉": { "价格": "16元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.5I_LKifKsSkXrZX1Zrg2iwHaFj?w=241&h=181&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "螺蛳粉火锅": { "价格": "35元", "图片": "https://tse4-mm.cn.bing.net/th/id/OIP-C.W_UufRKVS_RxkS5JGdDxzQHaFJ?w=267&h=186&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "加炸蛋": { "价格": "3元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.OLFwqUqWK9GF_ktf02SGoAHaFj?w=252&h=188&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "加鸭脚": { "价格": "4元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.sMe8g7ml8BqDv8xRjPkBqAHaE8?w=258&h=180&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "加腐竹": { "价格": "2元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.nZlY-PtCZyFLo9oaRYMSvQHaE8?w=289&h=194&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "加酸笋": { "价格": "1元", "图片": "https://tse1-mm.cn.bing.net/th/id/OIP-C.FA8JCLYd-Xku-XUbU2EgeQHaHh?w=203&h=207&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3" },
+                    "加木耳丝": { "价格": "1元", "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.SLrv" }
+                },
+                "区域": "潮街",
+                "口味标签": ["酸辣", "咸香", "鲜美", "爽滑"],
+                "距离": "25分钟",
+                "类型": "中餐",
+                "营业时间": "10:00-21:00",
+                "图片": "https://tse3-mm.cn.bing.net/th/id/OIP-C.3kJJyWtihwZtf8sIGJNI5AHaHa?w=203&h=203&c=7&r=0&o=7&cb=ucfimgc2&dpr=1.5&pid=1.7&rm=3",
+                "图标": "fas fa-bowl-rice",
+                "热销": true
+            }
+        ];
+
+        // 渲染餐厅卡片
+        function renderRestaurants(restaurantsToRender) {
+            const container = document.getElementById('restaurant-container');
+            
+            if (restaurantsToRender.length === 0) {
+                container.innerHTML = `
+                    <div class="no-results">
+                        <i class="fas fa-search"></i>
+                        <h3>没有找到匹配的餐厅</h3>
+                        <p>请尝试其他搜索条件</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = restaurantsToRender.map(restaurant => `
+                <div class="restaurant-card">
+                    <div class="card-image">
+                        <img src="${restaurant.图片}" alt="${restaurant.店名}">
+                        ${restaurant.热销 ? '<div class="card-badge">热销</div>' : ''}
+                    </div>
+                    <div class="card-header">
+                        <div class="restaurant-name">
+                            <i class="${restaurant.图标}"></i>
+                            ${restaurant.店名}
+                        </div>
+                        <div class="restaurant-info">
+                            <span><i class="fas fa-map-marker-alt"></i> ${restaurant.区域}</span>
+                            <span><i class="fas fa-clock"></i> ${restaurant.距离}</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="signature-dish">
+                            <i class="fas fa-star"></i> ${restaurant.招牌菜}
+                        </div>
+                        <div class="menu-items">
+                            ${Object.entries(restaurant.菜单).map(([dish, info]) => `
+                                <div class="menu-item" data-dish="${dish}" data-restaurant="${restaurant.店名}">
+                                    <div class="menu-item-info">
+                                        <div class="dish-image" data-image="${info.图片}">
+                                            <img src="${info.图片}" alt="${dish}">
+                                        </div>
+                                        <span>${dish}</span>
+                                    </div>
+                                    <span class="price">${info.价格}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="tags">
+                            ${restaurant.口味标签.map(tag => `
+                                <span class="tag">${tag}</span>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <span>${restaurant.营业时间}</span>
+                        <button class="order-btn"><i class="fas fa-shopping-cart"></i> 立即点餐</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            // 添加点餐按钮事件
+            document.querySelectorAll('.order-btn').forEach((btn, index) => {
+                btn.addEventListener('click', () => {
+                    const restaurant = restaurantsToRender[index];
+                    alert(`您选择了 ${restaurant.店名}，点餐功能即将开放！`);
+                });
+            });
+            
+            // 添加菜品图片点击事件
+            document.querySelectorAll('.dish-image').forEach(img => {
+                img.addEventListener('click', (e) => {
+                    const imageUrl = e.currentTarget.getAttribute('data-image');
+                    showImageModal(imageUrl);
+                });
+            });
+        }
+
+        // 显示图片模态框
+        function showImageModal(imageUrl) {
+            const modal = document.getElementById('image-modal');
+            const modalImg = document.getElementById('modal-image');
+            
+            modal.style.display = 'block';
+            modalImg.src = imageUrl;
+            
+            // 点击关闭按钮
+            document.querySelector('.close').onclick = function() {
+                modal.style.display = 'none';
+            }
+            
+            // 点击模态框外部关闭
+            modal.onclick = function(event) {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            }
+        }
+
+        // 显示美食详情模态框
+        function showDishDetails(restaurant, dishName) {
+            const dish = restaurant.菜单[dishName];
+            const dishModal = document.getElementById('dish-modal');
+            const dishModalTitle = document.getElementById('dish-modal-title');
+            const dishModalImage = document.getElementById('dish-modal-image');
+            const dishModalFlavor = document.getElementById('dish-modal-flavor');
+            const dishModalRestaurant = document.getElementById('dish-modal-restaurant');
+            const dishModalAddress = document.getElementById('dish-modal-address');
+            const dishModalTags = document.getElementById('dish-modal-tags');
+            const dishModalPrice = document.getElementById('dish-modal-price');
+            
+            // 填充模态框内容
+            dishModalTitle.textContent = dishName;
+            dishModalImage.src = dish.图片;
+            dishModalFlavor.textContent = restaurant.口味;
+            dishModalRestaurant.textContent = restaurant.店名;
+            dishModalAddress.textContent = restaurant.地址;
+            dishModalPrice.textContent = dish.价格;
+            
+            // 清空并重新填充标签
+            dishModalTags.innerHTML = '';
+            restaurant.口味标签.forEach(tag => {
+                const tagElement = document.createElement('span');
+                tagElement.className = 'dish-modal-tag';
+                tagElement.textContent = tag;
+                dishModalTags.appendChild(tagElement);
+            });
+            
+            // 显示模态框
+            dishModal.style.display = 'block';
+        }
+
+        // 初始渲染
+        renderRestaurants(restaurants);
+
+        // 搜索功能
+        document.getElementById('search-btn').addEventListener('click', performSearch);
+        document.getElementById('search-input').addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') performSearch();
+        });
+
+        function performSearch() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const filteredRestaurants = restaurants.filter(restaurant => 
+                restaurant.店名.toLowerCase().includes(searchTerm) ||
+                restaurant.招牌菜.toLowerCase().includes(searchTerm) ||
+                Object.keys(restaurant.菜单).some(dish => dish.toLowerCase().includes(searchTerm)) ||
+                restaurant.口味标签.some(tag => tag.toLowerCase().includes(searchTerm))
+            );
+            renderRestaurants(filteredRestaurants);
+        }
+
+        // 筛选功能
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                // 更新活动按钮
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                const filterType = btn.getAttribute('data-filter');
+                const filterValue = btn.getAttribute('data-value');
+                
+                let filteredRestaurants;
+                
+                if (filterType === 'all') {
+                    filteredRestaurants = restaurants;
+                } else {
+                    filteredRestaurants = restaurants.filter(restaurant => 
+                        restaurant[filterType] === filterValue
+                    );
+                }
+                
+                renderRestaurants(filteredRestaurants);
+            });
+        });
+
+        // 查看更多功能
+        document.getElementById('view-more-btn').addEventListener('click', function() {
+            alert('更多餐厅数据正在加载中...');
+        });
+
+        // 美食详情功能 - 使用事件委托处理菜单项点击
+        document.addEventListener('click', function(e) {
+            // 检查点击的是否是菜单项
+            const menuItem = e.target.closest('.menu-item');
+            if (menuItem) {
+                const dishName = menuItem.getAttribute('data-dish');
+                const restaurantName = menuItem.getAttribute('data-restaurant');
+                
+                // 查找对应的餐厅和菜品数据
+                const restaurant = restaurants.find(r => r.店名 === restaurantName);
+                if (restaurant && restaurant.菜单[dishName]) {
+                    showDishDetails(restaurant, dishName);
+                }
+            }
+        });
+
+        // 关闭美食详情模态框
+        document.querySelector('.dish-modal-close').addEventListener('click', function() {
+            document.getElementById('dish-modal').style.display = 'none';
+        });
+        
+        // 点击模态框外部关闭
+        window.addEventListener('click', function(e) {
+            if (e.target === document.getElementById('dish-modal')) {
+                document.getElementById('dish-modal').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
